@@ -1,31 +1,215 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bitahub 字典管理原型</title>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bitahub 运维平台 · 字典管理原型（完整版）</title>
 <style>
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial;background:#f5f7fa}
-.header{background:#0066ff;color:#fff;padding:12px 20px;font-size:18px}
-.main{padding:20px}
-.card{background:#fff;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:20px}
-.btn{background:#0066ff;color:#fff;border:0;padding:8px 16px;border-radius:6px;cursor:pointer}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);justify-content:center;align-items:center}
-.modal.show{display:flex}
-.dialog{background:#fff;border-radius:8px;padding:20px;min-width:300px}
+  :root{
+    --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
+    --radius:8px;--shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial}
+  .header{background:var(--primary);color:#fff;padding:12px 20px;font-size:18px}
+  .layout{display:flex;min-height:100dvh}
+  .sidebar{width:240px;background:#f8f9fb;border-right:1px solid var(--border);padding:14px}
+  .side-title{color:#999;font-size:12px;margin:6px 10px}
+  .menu a{display:flex;gap:8px;align-items:center;color:#334;text-decoration:none;padding:9px 12px;border-radius:6px;margin:4px 0}
+  .menu a.active{background:#e6f0ff;color:var(--primary);font-weight:600}
+  .menu .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+  .main{flex:1;padding:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer}
+  .btn.gray{background:#eef2f6;color:#223}
+  .input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-width:260px;background:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+  th{background:#fafbfc}
+  .status{display:inline-flex;align-items:center;gap:6px}
+  .dot-s{width:8px;height:8px;border-radius:50%}.green{background:#28a745}.red{background:#dc3545}
+  .pagination{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
+  .pagebtn{padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
+  .link{color:var(--primary);cursor:pointer}
+  .page{display:none}.page.active{display:block}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;padding:16px}
+  .modal.show{display:grid}
+  .dialog{background:#fff;border-radius:10px;min-width:360px;max-width:520px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  .dialog header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600}
+  .dialog main{padding:14px 16px;color:#334}
+  .dialog footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
 </style>
 </head>
 <body>
-<div class="header">Bitahub 运维平台 · 字典管理原型</div>
-<div class="main">
-  <div class="card">
-    <h3>字典列表</h3>
-    <button class="btn" id="btn-open">打开弹窗</button>
+  <div class="header">云端资源管理系统 · 字典管理原型</div>
+  <div class="layout">
+    <!-- 左侧导航 -->
+    <aside class="sidebar">
+      <div class="side-title">导航</div>
+      <nav class="menu">
+        <a><span class="dot"></span>业务系统管理</a>
+        <a><span class="dot"></span>集群管理</a>
+        <a><span class="dot"></span>任务管理</a>
+        <!-- 新增：任务管理下面是字典管理 -->
+        <a id="menu-dict" class="active"><span class="dot"></span>字典管理</a>
+        <a><span class="dot"></span>平台镜像</a>
+        <a><span class="dot"></span>监控告警</a>
+        <a><span class="dot"></span>API配置</a>
+      </nav>
+    </aside>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <!-- 字典列表页 -->
+      <section id="page-list" class="page active">
+        <div class="card">
+          <div class="toolbar">
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn" id="btn-create">➕ 创建字典</button>
+              <input class="input" placeholder="搜索：名称/编码" />
+            </div>
+            <span style="border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596">点击“编辑/创建字典”进入字典项管理；“删除/查看日志”为弹窗</span>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>annotation_type</td>
+                <td>标注类型</td>
+                <td>用于标注功能的类型配置</td>
+                <td>2025-10-15</td>
+                <td><span class="status"><span class="dot-s green"></span>成功</span></td>
+                <td>
+                  <span class="link" data-open="log">查看日志</span> |
+                  <span class="link" data-goto="item">编辑</span> |
+                  <span class="link" data-open="del">删除</span>
+                </td>
+              </tr>
+              <tr>
+                <td>file_type</td>
+                <td>文件类型</td>
+                <td>上传文件类型限制</td>
+                <td>2025-09-20</td>
+                <td><span class="status"><span class="dot-s green"></span>成功</span></td>
+                <td>
+                  <span class="link" data-open="log">查看日志</span> |
+                  <span class="link" data-goto="item">编辑</span> |
+                  <span class="link" data-open="del">删除</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <button class="pagebtn">«</button>
+            <button class="pagebtn">1</button>
+            <button class="pagebtn">2</button>
+            <button class="pagebtn">3</button>
+            <button class="pagebtn">»</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 字典项管理页 -->
+      <section id="page-item" class="page">
+        <div class="card">
+          <div class="toolbar">
+            <a href="javascript:void 0" id="btn-back">← 返回字典列表</a>
+            <button class="btn" id="btn-add-item">➕ 新增字典项</button>
+          </div>
+          <h3 style="margin:6px 2px 10px">字典项管理 · 标注类型（annotation_type）</h3>
+          <table>
+            <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>文字</td><td>text</td><td>启用</td><td>默认类型</td>
+                <td><span class="link" data-open="del">删除</span></td></tr>
+              <tr><td>2</td><td>图片</td><td>image</td><td>启用</td><td>2024新增</td>
+                <td><span class="link" data-open="del">删除</span></td></tr>
+              <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td>
+                <td><span class="link" data-open="del">删除</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
-<div id="modal" class="modal"><div class="dialog"><p>这是一个示例弹窗。</p><button class="btn" id="btn-close">关闭</button></div></div>
+
+  <!-- 弹窗：查看日志 -->
+  <div id="modal-log" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <header>操作日志</header>
+      <main>
+        <div>2025-10-15 创建字典 <b>annotation_type</b></div>
+        <div>2025-10-16 新增项 <b>audio</b></div>
+      </main>
+      <footer>
+        <button class="btn gray" data-close="log">关闭</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 弹窗：删除确认 -->
+  <div id="modal-del" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <header>确认删除</header>
+      <main>此操作不可恢复，是否继续？</main>
+      <footer>
+        <button class="btn gray" data-close="del">取消</button>
+        <button class="btn" data-close="del">确认删除</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 弹窗：新增字典项 -->
+  <div id="modal-add" class="modal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <header>新增字典项</header>
+      <main>
+        <div style="display:grid;gap:10px">
+          <label>Label：<input class="input" placeholder="如：音频"></label>
+          <label>Value：<input class="input" placeholder="如：audio"></label>
+          <label>备注：<input class="input" placeholder="可选"></label>
+        </div>
+      </main>
+      <footer>
+        <button class="btn gray" data-close="add">取消</button>
+        <button class="btn" data-close="add">保存</button>
+      </footer>
+    </div>
+  </div>
+
 <script>
-const m=document.getElementById('modal')
-document.getElementById('btn-open').onclick=()=>m.classList.add('show')
-document.getElementById('btn-close').onclick=()=>m.classList.remove('show')
+  // 路由切换
+  const show = id => {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+  document.getElementById('btn-create').onclick = ()=>show('page-item');
+  document.querySelectorAll('[data-goto="item"]').forEach(a=>a.onclick=()=>show('page-item'));
+  document.getElementById('btn-back').onclick = ()=>show('page-list');
+
+  // 模态
+  const open = id => document.getElementById('modal-'+id).classList.add('show');
+  const close = id => document.getElementById('modal-'+id).classList.remove('show');
+
+  document.querySelectorAll('[data-open="log"]').forEach(el=>el.onclick=()=>open('log'));
+  document.querySelectorAll('[data-open="del"]').forEach(el=>el.onclick=()=>open('del'));
+  document.getElementById('btn-add-item').onclick = ()=>open('add');
+
+  document.querySelectorAll('[data-close="log"]').forEach(el=>el.onclick=()=>close('log'));
+  document.querySelectorAll('[data-close="del"]').forEach(el=>el.onclick=()=>close('del'));
+  document.querySelectorAll('[data-close="add"]').forEach(el=>el.onclick=()=>close('add'));
+
+  // 点击蒙层关闭
+  ['log','del','add'].forEach(id=>{
+    document.getElementById('modal-'+id).addEventListener('click',e=>{
+      if(e.target.id==='modal-'+id) close(id);
+    });
+  });
 </script>
 </body>
 </html>
