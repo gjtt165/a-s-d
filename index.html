@@ -20,6 +20,7 @@
   .menu a.active{background:#e6f0ff;color:var(--primary);font-weight:600}
   .menu .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
   .main{flex:1;padding:18px}
+
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
   .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
   .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px}
@@ -30,7 +31,7 @@
   .link{color:var(--primary);cursor:pointer}
   .note{border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596}
 
-  /* 按钮 */
+  /* 按钮与图标 */
   .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .btn:hover{filter:brightness(.96)}
   .btn.gray{background:#eef2f6;color:#223}
@@ -38,16 +39,23 @@
   .btn .icon-plus svg path{fill:#fff;stroke:#fff}
   .btn .icon-left svg path{stroke:#222}
 
-  /* 状态标签（仅展示，不交互） */
+  /* 状态徽章（展示用） */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600}
-  .b-enabled{color:var(--green);background:rgba(34,197,94,.12)}
-  .b-draft{color:var(--yellow);background:rgba(245,158,11,.16)}
-  .b-pending{color:var(--blue);background:rgba(59,130,246,.16)}
-  .b-rejected{color:var(--red);background:rgba(239,68,68,.14)}
+  .b-enabled{color:var(--green);background:rgba(34,197,94,.12)}      /* 🟢 启用中 */
+  .b-draft{color:var(--yellow);background:rgba(245,158,11,.16)}      /* 🟡 草稿 */
+  .b-publishing{color:var(--blue);background:rgba(59,130,246,.16)}   /* 🔵 发布中 */
+  .b-failed{color:var(--red);background:rgba(239,68,68,.14)}          /* 🔴 发布失败 */
 
   /* 页面切换 */
   .page{display:none}
   .page.active{display:block}
+
+  /* 字典元信息编辑区 */
+  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px;margin:6px 0 14px}
+  .meta-form label{color:#555;align-self:center}
+  .meta-form .row{display:contents}
+  .meta-actions{display:flex;gap:8px;margin-top:6px}
+  .tip-mini{color:#8a8f98;font-size:12px}
 
   /* 模态框 */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;padding:16px;z-index:20}
@@ -92,7 +100,7 @@
               <input class="input" placeholder="搜索：名称/编码" />
             </div>
             <div class="toolbar-right">
-              <span class="note">状态：🟢启用中 / 🟡草稿 / 🔵发布中 / 🔴发布失败</span>
+              <span class="note">状态仅展示：🟢启用中 / 🟡草稿 / 🔵发布中 / 🔴发布失败</span>
             </div>
           </div>
 
@@ -109,10 +117,11 @@
 
       <!-- 字典项管理页 -->
       <section id="page-item" class="page">
-        <div class="card">
+        <!-- 顶部工具栏：返回 + 新增项 -->
+        <div class="card" style="margin-bottom:12px">
           <div class="toolbar">
             <div class="toolbar-left">
-              <button class="btn gray btn-back" id="btn-back">
+              <button class="btn gray" id="btn-back">
                 <span class="icon-left">
                   <svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
@@ -129,7 +138,27 @@
             </div>
           </div>
 
-          <h3 style="margin:6px 2px 10px">字典项管理 · 标注类型（annotation_type）</h3>
+          <!-- 字典元信息编辑区 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="tip-mini">可编辑字典的基础信息，保存后同步到列表与标题</div>
+            <div class="meta-actions">
+              <button class="btn" id="btn-save-dict">
+                <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
+                  <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>保存
+              </button>
+            </div>
+          </div>
+          <div class="meta-form">
+            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：annotation_type"></div>
+            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：标注类型"></div>
+            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于标注功能的类型配置"></div>
+          </div>
+        </div>
+
+        <!-- 字典项表格 -->
+        <div class="card">
+          <h3 style="margin:6px 2px 10px" id="dict-title">字典项管理 · （未设置编码）</h3>
           <table>
             <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
             <tbody>
@@ -167,7 +196,7 @@
     </div>
   </div>
 
-  <!-- 弹窗：新增字典项 -->
+  <!-- 弹窗：新增字典项（演示） -->
   <div id="modal-add" class="modal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true">
       <header>新增字典项</header>
@@ -186,25 +215,26 @@
   </div>
 
 <script>
-/* —— 精简状态体系（展示用） —— */
+/* —— 状态体系（展示用） —— */
 const STATUS = {
-  ENABLED:        {cls:'b-enabled',  text:'启用中',   icon:'🟢'},
-  DRAFT:          {cls:'b-draft',    text:'草稿',     icon:'🟡'},
-  PENDING_REVIEW: {cls:'b-pending',  text:'审核中',   icon:'🔵'},
-  REJECTED:       {cls:'b-rejected', text:'审核失败', icon:'🔴'}
+  ENABLED:   {cls:'b-enabled',     text:'启用中',  icon:'🟢'},
+  DRAFT:     {cls:'b-draft',       text:'草稿',    icon:'🟡'},
+  PUBLISHING:{cls:'b-publishing',  text:'发布中',  icon:'🔵'},
+  PUBLISH_FAILED:{cls:'b-failed',  text:'发布失败',icon:'🔴'}
 };
+
 /* 示例数据：覆盖四种状态 */
 let rows = [
   { code:'annotation_type', name:'标注类型', desc:'用于标注功能的类型配置', date:'2025-10-15', status:'ENABLED' },
   { code:'label_template',  name:'标签模板', desc:'标注标签模板集',         date:'2025-10-12', status:'DRAFT' },
-  { code:'review_flag',     name:'审核标记', desc:'敏感配置需审核',         date:'2025-10-14', status:'PENDING_REVIEW' },
-  { code:'new_rules',       name:'新规则',   desc:'新建后被驳回示例',       date:'2025-10-16', status:'REJECTED' }
+  { code:'review_flag',     name:'发布流程', desc:'发布审批中的配置',         date:'2025-10-14', status:'PUBLISHING' },
+  { code:'new_rules',       name:'新规则',   desc:'最近一次发布失败示例',     date:'2025-10-16', status:'PUBLISH_FAILED' }
 ];
 
-const $ = s => document.querySelector(s);
+const $  = s => document.querySelector(s);
 const byId = id => document.getElementById(id);
 
-/* 模态开关 */
+/* —— 模态开关 —— */
 const openM = id => byId('modal-'+id).classList.add('show');
 const closeM = id => byId('modal-'+id).classList.remove('show');
 ['log','del','add'].forEach(id=>{
@@ -216,17 +246,54 @@ document.querySelectorAll('[data-close="log"]').forEach(el=>el.onclick=()=>close
 document.querySelectorAll('[data-close="del"]').forEach(el=>el.onclick=()=>closeM('del'));
 document.querySelectorAll('[data-close="add"]').forEach(el=>el.onclick=()=>closeM('add'));
 
-/* 页面切换 */
+/* —— 页面切换 —— */
 const show = id => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   byId(id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 };
-byId('btn-create').onclick = ()=>show('page-item');
 byId('btn-back').onclick   = ()=>show('page-list');
 byId('btn-add-item').onclick = ()=>openM('add');
 
-/* 渲染表格 */
+/* —— 字典元信息编辑 —— */
+let currentDictCode = null; // 当前正在编辑的字典编码
+
+function fillMetaForm(row) {
+  byId('edit-code').value = row?.code || '';
+  byId('edit-name').value = row?.name || '';
+  byId('edit-desc').value = row?.desc || '';
+  currentDictCode = row ? row.code : null;
+  byId('dict-title').innerHTML =
+    `字典项管理 · ${row?.name || '新字典'}（${row?.code || '未设置编码'}）`;
+}
+function saveMetaForm() {
+  const code = byId('edit-code').value.trim();
+  const name = byId('edit-name').value.trim();
+  const desc = byId('edit-desc').value.trim();
+  if(!code || !name){ alert('“字典编码”和“名称”为必填项'); return; }
+  // 编码唯一校验
+  const exists = rows.some(r => r.code===code && r.code!==currentDictCode);
+  if(exists){ alert('字典编码已存在，请更换'); return; }
+  const now = new Date().toISOString().slice(0,10);
+  if(currentDictCode===null){
+    rows.unshift({code,name,desc,date:now,status:'DRAFT'});
+  }else{
+    rows = rows.map(r=> r.code===currentDictCode ? {...r, code,name,desc} : r);
+  }
+  render();
+  const row = rows.find(r=>r.code===code);
+  fillMetaForm(row);
+  alert('已保存');
+}
+byId('btn-save-dict').onclick = saveMetaForm;
+
+/* 列表页“创建字典”→ 进入项页并清空表单 */
+byId('btn-create').onclick = ()=>{
+  show('page-item');
+  fillMetaForm(null);
+};
+
+/* —— 渲染列表 —— */
 const tbody = byId('dict-table').querySelector('tbody');
 let pendingDeleteCode = null;
 
@@ -266,7 +333,12 @@ function render(){
     };
   });
   document.querySelectorAll('[data-edit]').forEach(a=>{
-    a.onclick = ()=> show('page-item');
+    a.onclick = ()=>{
+      const code = a.getAttribute('data-edit');
+      const row = rows.find(r=>r.code===code);
+      show('page-item');
+      fillMetaForm(row);
+    };
   });
   document.querySelectorAll('[data-del]').forEach(a=>{
     a.onclick = ()=>{
@@ -277,7 +349,7 @@ function render(){
 }
 render();
 
-/* 删除：这里演示为从列表移除；若你想逻辑删除可改为状态=REJECTED */
+/* 删除：演示为从列表移除；如需逻辑删除可以改为设置状态 */
 byId('confirm-delete').onclick = ()=>{
   if(pendingDeleteCode){
     rows = rows.filter(r=>r.code!==pendingDeleteCode);
@@ -289,3 +361,4 @@ byId('confirm-delete').onclick = ()=>{
 </script>
 </body>
 </html>
+
