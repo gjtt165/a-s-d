@@ -21,7 +21,10 @@
   .menu .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
   .main{flex:1;padding:18px}
 
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;position:relative}
+  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+  .hint{color:#8a8f98;font-size:12px}
+
   .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
   .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px}
   .input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-width:260px;background:#fff}
@@ -31,12 +34,17 @@
   .link{color:var(--primary);cursor:pointer}
   .note{border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596}
 
-  /* 按钮与图标（统一对齐 & 白色加号） */
+  /* 按钮与图标（白色加号对齐） */
   .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .btn:hover{filter:brightness(.96)}
   .btn.gray{background:#eef2f6;color:#223}
   .btn .icon-plus svg path{fill:#fff;stroke:#fff}
   .btn .icon-left svg path{stroke:#222}
+
+  /* 元信息表单（基本信息模块） */
+  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px}
+  .meta-form label{color:#555;align-self:center}
+  .meta-form .row{display:contents}
 
   /* 状态徽章（展示） */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600}
@@ -49,32 +57,16 @@
   .page{display:none}
   .page.active{display:block}
 
-  /* 元信息编辑区 */
-  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px;margin:10px 0 2px}
-  .meta-form label{color:#555;align-self:center}
-  .meta-form .row{display:contents}
-  .tip-mini{color:#8a8f98;font-size:12px}
-
-  /* 顶部吸附工具条（保存置顶） */
-  .sticky-topbar{
-    position: sticky; top:0; z-index:5; background:linear-gradient(#ffffff,#ffffffef);
-    border:1px solid var(--border); border-radius:10px; padding:10px 12px; box-shadow:0 6px 16px rgba(0,0,0,.05); margin-bottom:12px;
-    display:flex;justify-content:space-between;align-items:center;gap:10px
+  /* “新增字典项”定位在字典项卡片的右下角（随模块滚动） */
+  .card .btn-add-in-card{
+    position:absolute; right:16px; bottom:16px;
+    box-shadow:0 10px 20px rgba(0,102,255,.15)
   }
-
-  /* 悬浮新增按钮（右下角，仅字典项页显示） */
-  .fab{
-    position: fixed; right:28px; bottom:28px; z-index:6;
-    display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
-    background:var(--primary); color:#fff; border:0; border-radius:999px; box-shadow:0 12px 24px rgba(0,102,255,.28); cursor:pointer
-  }
-  .fab .icon-plus svg path{fill:#fff;stroke:#fff}
 
   @media (max-width: 960px){
     .sidebar{display:none}
     .main{padding:12px}
     .input{min-width:180px}
-    .fab{right:16px;bottom:16px}
   }
 </style>
 </head>
@@ -125,34 +117,39 @@
 
       <!-- 字典项管理页 -->
       <section id="page-item" class="page">
-        <!-- 顶部吸附工具条：返回 + 保存（保存置顶） -->
-        <div class="sticky-topbar">
-          <div style="display:flex;align-items:center;gap:8px">
-            <button class="btn gray" id="btn-back">
-              <span class="icon-left"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              返回
-            </button>
-            <span class="tip-mini">可编辑字典元信息，保存后同步到列表与标题</span>
-          </div>
-          <button class="btn" id="btn-save-dict">
-            <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
-              <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-            </svg>保存
-          </button>
-        </div>
 
-        <!-- 元信息表单 -->
+        <!-- 基本信息模块（返回+保存 在同一模块右侧） -->
         <div class="card" style="margin-bottom:12px">
+          <div class="card-head">
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn gray" id="btn-back">
+                <span class="icon-left"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                返回
+              </button>
+              <span class="hint">可编辑字典元信息，保存后同步到列表与标题</span>
+            </div>
+            <div>
+              <button class="btn" id="btn-save-dict">
+                <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
+                  <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>保存
+              </button>
+            </div>
+          </div>
+
           <div class="meta-form">
-            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：app_market_scene"></div>
-            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：大模型应用场景"></div>
-            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于应用市场的场景配置"></div>
+            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：annotation_type"></div>
+            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：标注类型"></div>
+            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于标注功能的类型配置"></div>
           </div>
         </div>
 
-        <!-- 字典项表格 -->
+        <!-- 字典项模块（右下角有“新增字典项”按钮） -->
         <div class="card">
-          <h3 style="margin:6px 2px 10px" id="dict-title">字典项管理 · 大模型应用场景（app_market_scene）</h3>
+          <div class="card-head">
+            <h3 id="dict-title" style="margin:0">字典项管理 · 大模型应用场景（app_market_scene）</h3>
+          </div>
+
           <table>
             <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
             <tbody>
@@ -161,13 +158,13 @@
               <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td><td><span class="link" data-open="del">删除</span></td></tr>
             </tbody>
           </table>
-        </div>
 
-        <!-- 右下角悬浮：新增字典项 -->
-        <button class="fab" id="btn-add-item">
-          <span class="icon-plus"><svg viewBox="0 0 16 16" width="18" height="18"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
-          新增字典项
-        </button>
+          <!-- 放在模块右下角 -->
+          <button class="btn btn-add-in-card" id="btn-add-item">
+            <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
+            新增字典项
+          </button>
+        </div>
       </section>
     </main>
   </div>
@@ -280,7 +277,6 @@ function render(){
     tbody.appendChild(tr);
   });
 
-  // 操作事件
   document.querySelectorAll('[data-log]').forEach(a=>{
     a.onclick = ()=>{
       const code = a.getAttribute('data-log');
@@ -322,9 +318,9 @@ byId('confirm-delete').onclick = ()=>{
 let currentDictCode = null;
 
 function fillMetaForm(row) {
-  byId('edit-code').value = row?.code || 'app_market_scene';
-  byId('edit-name').value = row?.name || '大模型应用场景';
-  byId('edit-desc').value = row?.desc || '用于应用市场的场景配置';
+  byId('edit-code').value = row?.code || 'annotation_type';
+  byId('edit-name').value = row?.name || '标注类型';
+  byId('edit-desc').value = row?.desc || '用于标注功能的类型配置';
   currentDictCode = row ? row.code : null;
   byId('dict-title').innerHTML =
     `字典项管理 · ${byId('edit-name').value}（${byId('edit-code').value}）`;
@@ -355,8 +351,8 @@ byId('btn-back').onclick   = ()=> show('page-list');
 byId('btn-save-dict').onclick = saveMetaForm;
 byId('btn-add-item').onclick  = ()=> openM('add');
 
-/* 首次进入项页时的标题占位 */
-fillMetaForm({code:'app_market_scene',name:'大模型应用场景',desc:'用于应用市场的场景配置'});
+/* 默认展示的占位 */
+fillMetaForm({code:'annotation_type',name:'标注类型',desc:'用于标注功能的类型配置'});
 </script>
 </body>
 </html>
