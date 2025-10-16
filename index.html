@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bitahub 运维平台 · 字典管理原型（新增位于字典项模块右上）</title>
+<title>Bitahub · 字典管理原型（可编辑字典项）</title>
 <style>
   :root{
     --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
@@ -20,100 +20,44 @@
   .menu a.active{background:#e6f0ff;color:var(--primary);font-weight:600}
   .menu .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
   .main{flex:1;padding:18px}
-
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;position:relative}
   .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
   .hint{color:#8a8f98;font-size:12px}
-
-  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-  .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px}
-  .input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-width:260px;background:#fff}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
-  th{background:#fafbfc}
-  .link{color:var(--primary);cursor:pointer}
-  .note{border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596}
-
-  /* 按钮与图标（白色加号对齐） */
   .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .btn:hover{filter:brightness(.96)}
   .btn.gray{background:#eef2f6;color:#223}
   .btn .icon-plus svg path{fill:#fff;stroke:#fff}
   .btn .icon-left svg path{stroke:#222}
-
-  /* 元信息表单（基本信息模块） */
   .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px}
   .meta-form label{color:#555;align-self:center}
   .meta-form .row{display:contents}
-
-  /* 状态徽章（展示） */
-  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600}
-  .b-enabled{color:var(--green);background:rgba(34,197,94,.12)}      /* 🟢 启用中 */
-  .b-draft{color:var(--yellow);background:rgba(245,158,11,.16)}      /* 🟡 草稿 */
-  .b-publishing{color:var(--blue);background:rgba(59,130,246,.16)}   /* 🔵 发布中 */
-  .b-failed{color:var(--red);background:rgba(239,68,68,.14)}          /* 🔴 发布失败 */
-
-  /* 页面切换 */
+  .input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;min-width:120px;background:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+  th{background:#fafbfc}
+  .link{color:var(--primary);cursor:pointer}
   .page{display:none}
   .page.active{display:block}
-
-  /* ✂️ 删除了旧的右下角悬浮按钮样式 .btn-add-in-card */
-  @media (max-width: 960px){
-    .sidebar{display:none}
-    .main{padding:12px}
-    .input{min-width:180px}
-  }
 </style>
 </head>
 <body>
   <div class="header">云端资源管理系统 · 字典管理原型</div>
 
   <div class="layout">
-    <!-- 左侧导航 -->
     <aside class="sidebar">
       <div class="side-title">导航</div>
       <nav class="menu">
         <a><span class="dot"></span>业务系统管理</a>
-        <a><span class="dot"></span>集群管理</a>
         <a><span class="dot"></span>任务管理</a>
         <a class="active"><span class="dot"></span>字典管理</a>
-        <a><span class="dot"></span>平台镜像</a>
-        <a><span class="dot"></span>监控告警</a>
         <a><span class="dot"></span>API配置</a>
       </nav>
     </aside>
 
-    <!-- 主内容 -->
     <main class="main">
-      <!-- 字典列表页 -->
-      <section id="page-list" class="page active">
-        <div class="card">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <button class="btn" id="btn-create">
-                <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
-                创建字典
-              </button>
-              <input class="input" placeholder="搜索：名称/编码" />
-            </div>
-            <div class="toolbar-right">
-              <span class="note">状态仅展示：🟢启用中 / 🟡草稿 / 🔵发布中 / 🔴发布失败</span>
-            </div>
-          </div>
+      <section id="page-item" class="page active">
 
-          <table id="dict-table">
-            <thead>
-              <tr><th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th style="width:220px">操作</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 字典项管理页 -->
-      <section id="page-item" class="page">
-
-        <!-- 基本信息模块（返回+保存 在同一模块右侧） -->
+        <!-- 基本信息模块 -->
         <div class="card" style="margin-bottom:12px">
           <div class="card-head">
             <div style="display:flex;align-items:center;gap:10px">
@@ -133,13 +77,13 @@
           </div>
 
           <div class="meta-form">
-            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：annotation_type"></div>
-            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：标注类型"></div>
-            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于标注功能的类型配置"></div>
+            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" value="annotation_type"></div>
+            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" value="标注类型"></div>
+            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" value="用于标注功能的类型配置"></div>
           </div>
         </div>
 
-        <!-- 字典项模块（新增按钮在右上角） -->
+        <!-- 字典项模块 -->
         <div class="card">
           <div class="card-head">
             <h3 id="dict-title" style="margin:0">字典项管理 · 标注类型（annotation_type）</h3>
@@ -149,12 +93,30 @@
             </button>
           </div>
 
-          <table>
-            <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td>文字</td><td>text</td><td>启用</td><td>默认类型</td><td><span class="link" data-open="del">删除</span></td></tr>
-              <tr><td>2</td><td>图片</td><td>image</td><td>启用</td><td>2024新增</td><td><span class="link" data-open="del">删除</span></td></tr>
-              <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td><td><span class="link" data-open="del">删除</span></td></tr>
+          <table id="dict-item-table">
+            <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>备注</th><th>操作</th></tr></thead>
+            <tbody id="dict-item-body">
+              <tr>
+                <td>1</td>
+                <td><input class="input" value="文字"></td>
+                <td><input class="input" value="text"></td>
+                <td><input class="input" value="默认类型"></td>
+                <td><span class="link" onclick="deleteRow(this)">删除</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td><input class="input" value="图片"></td>
+                <td><input class="input" value="image"></td>
+                <td><input class="input" value="2024新增"></td>
+                <td><span class="link" onclick="deleteRow(this)">删除</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><input class="input" value="音频"></td>
+                <td><input class="input" value="audio"></td>
+                <td><input class="input" value="运维新增"></td>
+                <td><span class="link" onclick="deleteRow(this)">删除</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -162,190 +124,54 @@
     </main>
   </div>
 
-  <!-- 弹窗：查看日志 -->
-  <div id="modal-log" class="modal" aria-hidden="true">
-    <div class="dialog" role="dialog" aria-modal="true">
-      <header>操作日志</header>
-      <main id="log-content">
-        <div>2025-10-15 创建字典 <b>annotation_type</b></div>
-        <div>2025-10-16 新增项 <b>audio</b></div>
-      </main>
-      <footer><button class="btn gray" data-close="log">关闭</button></footer>
-    </div>
-  </div>
-
-  <!-- 弹窗：删除确认 -->
-  <div id="modal-del" class="modal" aria-hidden="true">
-    <div class="dialog" role="dialog" aria-modal="true">
-      <header>确认删除</header>
-      <main>此操作不可恢复，是否继续？</main>
-      <footer>
-        <button class="btn gray" data-close="del">取消</button>
-        <button class="btn" id="confirm-delete">确认删除</button>
-      </footer>
-    </div>
-  </div>
-
-  <!-- 弹窗：新增字典项（示意） -->
-  <div id="modal-add" class="modal" aria-hidden="true">
-    <div class="dialog" role="dialog" aria-modal="true">
-      <header>新增字典项</header>
-      <main>
-        <div style="display:grid;gap:10px">
-          <label>Label：<input class="input" placeholder="如：音频"></label>
-          <label>Value：<input class="input" placeholder="如：audio"></label>
-          <label>备注：<input class="input" placeholder="可选"></label>
-        </div>
-      </main>
-      <footer>
-        <button class="btn gray" data-close="add">取消</button>
-        <button class="btn" data-close="add">保存</button>
-      </footer>
-    </div>
-  </div>
-
 <script>
-/* —— 状态体系（展示） —— */
-const STATUS = {
-  ENABLED:{cls:'b-enabled',text:'启用中',icon:'🟢'},
-  DRAFT:{cls:'b-draft',text:'草稿',icon:'🟡'},
-  PUBLISHING:{cls:'b-publishing',text:'发布中',icon:'🔵'},
-  PUBLISH_FAILED:{cls:'b-failed',text:'发布失败',icon:'🔴'}
+// 删除一行
+function deleteRow(el){
+  el.closest('tr').remove();
+  updateRowNumbers();
+}
+
+// 新增一行
+document.getElementById('btn-add-item').onclick = function(){
+  const tbody = document.getElementById('dict-item-body');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td></td>
+    <td><input class="input" placeholder="请输入Label"></td>
+    <td><input class="input" placeholder="请输入Value"></td>
+    <td><input class="input" placeholder="备注"></td>
+    <td><span class="link" onclick="deleteRow(this)">删除</span></td>
+  `;
+  tbody.appendChild(row);
+  updateRowNumbers();
 };
 
-/* 示例数据（列表） */
-let rows = [
-  { code:'annotation_type', name:'标注类型', desc:'用于标注功能的类型配置', date:'2025-10-15', status:'ENABLED' },
-  { code:'label_template',  name:'标签模板', desc:'标注标签模板集',         date:'2025-10-12', status:'DRAFT' },
-  { code:'review_flow',     name:'发布流程', desc:'发布审批中的配置',         date:'2025-10-14', status:'PUBLISHING' },
-  { code:'new_rules',       name:'新规则',   desc:'最近一次发布失败示例',     date:'2025-10-16', status:'PUBLISH_FAILED' }
-];
-
-const $  = s => document.querySelector(s);
-const byId = id => document.getElementById(id);
-
-/* —— 模态开关 —— */
-const openM = id => byId('modal-'+id).classList.add('show');
-const closeM = id => byId('modal-'+id).classList.remove('show');
-['log','del','add'].forEach(id=>{
-  byId('modal-'+id).addEventListener('click',e=>{
-    if(e.target.id==='modal-'+id) closeM(id);
-  });
-});
-document.querySelectorAll('[data-close="log"]').forEach(el=>el.onclick=()=>closeM('log'));
-document.querySelectorAll('[data-close="del"]').forEach(el=>el.onclick=()=>closeM('del'));
-document.querySelectorAll('[data-close="add"]').forEach(el=>el.onclick=()=>closeM('add'));
-
-/* —— 页面切换 —— */
-const show = id => {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  byId(id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-};
-
-/* —— 列表页渲染 —— */
-const tbody = byId('dict-table').querySelector('tbody');
-let pendingDeleteCode = null;
-
-function badge(status){
-  const s = STATUS[status] || STATUS.DRAFT;
-  return `<span class="badge ${s.cls}" title="${status}">${s.icon} ${s.text}</span>`;
-}
-function render(){
-  tbody.innerHTML = '';
-  rows.forEach(r=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${r.code}</td>
-      <td>${r.name}</td>
-      <td>${r.desc}</td>
-      <td>${r.date}</td>
-      <td>${badge(r.status)}</td>
-      <td>
-        <span class="link" data-log="${r.code}">查看日志</span> |
-        <span class="link" data-edit="${r.code}">编辑</span> |
-        <span class="link" data-del="${r.code}">删除</span>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  document.querySelectorAll('[data-log]').forEach(a=>{
-    a.onclick = ()=>{
-      const code = a.getAttribute('data-log');
-      byId('log-content').innerHTML = `
-        <div>操作日志（${code}）</div>
-        <div>· ${new Date().toLocaleString()} 查看详情</div>
-      `;
-      openM('log');
-    };
-  });
-  document.querySelectorAll('[data-edit]').forEach(a=>{
-    a.onclick = ()=>{
-      const code = a.getAttribute('data-edit');
-      const row = rows.find(r=>r.code===code);
-      show('page-item');
-      fillMetaForm(row);
-    };
-  });
-  document.querySelectorAll('[data-del]').forEach(a=>{
-    a.onclick = ()=>{
-      pendingDeleteCode = a.getAttribute('data-del');
-      openM('del');
-    };
+// 自动更新排序号
+function updateRowNumbers(){
+  document.querySelectorAll('#dict-item-body tr').forEach((tr,i)=>{
+    tr.children[0].textContent = i+1;
   });
 }
-render();
 
-/* 删除：演示为从列表移除 */
-byId('confirm-delete').onclick = ()=>{
-  if(pendingDeleteCode){
-    rows = rows.filter(r=>r.code!==pendingDeleteCode);
-    pendingDeleteCode = null;
-    render();
-  }
-  closeM('del');
-};
-
-/* —— 元信息编辑 —— */
-let currentDictCode = null;
-
-function fillMetaForm(row) {
-  byId('edit-code').value = row?.code || 'annotation_type';
-  byId('edit-name').value = row?.name || '标注类型';
-  byId('edit-desc').value = row?.desc || '用于标注功能的类型配置';
-  currentDictCode = row ? row.code : null;
-  byId('dict-title').innerHTML =
-    `字典项管理 · ${byId('edit-name').value}（${byId('edit-code').value}）`;
+// 保存
+document.getElementById('btn-save-dict').onclick = function(){
+  const dictInfo = {
+    code: document.getElementById('edit-code').value,
+    name: document.getElementById('edit-name').value,
+    desc: document.getElementById('edit-desc').value,
+    items: []
+  };
+  document.querySelectorAll('#dict-item-body tr').forEach(tr=>{
+    const inputs = tr.querySelectorAll('input');
+    dictInfo.items.push({
+      label: inputs[0].value,
+      value: inputs[1].value,
+      remark: inputs[2].value
+    });
+  });
+  console.log("保存数据：", dictInfo);
+  alert("保存成功！（控制台查看JSON）");
 }
-
-function saveMetaForm() {
-  const code = byId('edit-code').value.trim();
-  const name = byId('edit-name').value.trim();
-  const desc = byId('edit-desc').value.trim();
-  if(!code || !name){ alert('“字典编码”和“名称”为必填项'); return; }
-  const exists = rows.some(r => r.code===code && r.code!==currentDictCode);
-  if(exists){ alert('字典编码已存在，请更换'); return; }
-  const now = new Date().toISOString().slice(0,10);
-  if(currentDictCode===null){
-    rows.unshift({code,name,desc,date:now,status:'DRAFT'});
-  }else{
-    rows = rows.map(r=> r.code===currentDictCode ? {...r, code,name,desc} : r);
-  }
-  render();
-  const row = rows.find(r=>r.code===code);
-  fillMetaForm(row);
-  alert('已保存');
-}
-
-/* 事件绑定 */
-byId('btn-create').onclick = ()=>{ show('page-item'); fillMetaForm(null); };
-byId('btn-back').onclick   = ()=> show('page-list');
-byId('btn-save-dict').onclick = saveMetaForm;
-byId('btn-add-item').onclick  = ()=> openM('add');
-
-/* 默认展示的占位 */
-fillMetaForm({code:'annotation_type',name:'标注类型',desc:'用于标注功能的类型配置'});
 </script>
 </body>
 </html>
