@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bitahub 运维平台 </title>
+<title>Bitahub 运维平台 · 字典管理原型（保存置顶 / 新增右下角）</title>
 <style>
   :root{
     --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
@@ -31,15 +31,14 @@
   .link{color:var(--primary);cursor:pointer}
   .note{border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596}
 
-  /* 按钮与图标 */
+  /* 按钮与图标（统一对齐 & 白色加号） */
   .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
   .btn:hover{filter:brightness(.96)}
   .btn.gray{background:#eef2f6;color:#223}
-  .btn.ghost{background:transparent;color:var(--primary);border:1px solid var(--border)}
   .btn .icon-plus svg path{fill:#fff;stroke:#fff}
   .btn .icon-left svg path{stroke:#222}
 
-  /* 状态徽章（展示用） */
+  /* 状态徽章（展示） */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600}
   .b-enabled{color:var(--green);background:rgba(34,197,94,.12)}      /* 🟢 启用中 */
   .b-draft{color:var(--yellow);background:rgba(245,158,11,.16)}      /* 🟡 草稿 */
@@ -50,20 +49,33 @@
   .page{display:none}
   .page.active{display:block}
 
-  /* 字典元信息编辑区 */
-  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px;margin:6px 0 14px}
+  /* 元信息编辑区 */
+  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px;margin:10px 0 2px}
   .meta-form label{color:#555;align-self:center}
   .meta-form .row{display:contents}
-  .meta-actions{display:flex;gap:8px;margin-top:6px}
   .tip-mini{color:#8a8f98;font-size:12px}
 
-  /* 模态框 */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;padding:16px;z-index:20}
-  .modal.show{display:grid}
-  .dialog{background:#fff;border-radius:10px;min-width:360px;max-width:560px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
-  .dialog header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600}
-  .dialog main{padding:14px 16px;color:#334}
-  .dialog footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  /* 顶部吸附工具条（保存置顶） */
+  .sticky-topbar{
+    position: sticky; top:0; z-index:5; background:linear-gradient(#ffffff,#ffffffef);
+    border:1px solid var(--border); border-radius:10px; padding:10px 12px; box-shadow:0 6px 16px rgba(0,0,0,.05); margin-bottom:12px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px
+  }
+
+  /* 悬浮新增按钮（右下角，仅字典项页显示） */
+  .fab{
+    position: fixed; right:28px; bottom:28px; z-index:6;
+    display:inline-flex; align-items:center; gap:10px; padding:12px 16px;
+    background:var(--primary); color:#fff; border:0; border-radius:999px; box-shadow:0 12px 24px rgba(0,102,255,.28); cursor:pointer
+  }
+  .fab .icon-plus svg path{fill:#fff;stroke:#fff}
+
+  @media (max-width: 960px){
+    .sidebar{display:none}
+    .main{padding:12px}
+    .input{min-width:180px}
+    .fab{right:16px;bottom:16px}
+  }
 </style>
 </head>
 <body>
@@ -92,9 +104,7 @@
           <div class="toolbar">
             <div class="toolbar-left">
               <button class="btn" id="btn-create">
-                <span class="icon-plus">
-                  <svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg>
-                </span>
+                <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
                 创建字典
               </button>
               <input class="input" placeholder="搜索：名称/编码" />
@@ -108,57 +118,41 @@
             <thead>
               <tr><th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th style="width:220px">操作</th></tr>
             </thead>
-            <tbody>
-              <!-- JS 渲染 -->
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
       </section>
 
       <!-- 字典项管理页 -->
       <section id="page-item" class="page">
-        <!-- 顶部工具栏：返回 + 新增项 -->
-        <div class="card" style="margin-bottom:12px">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <button class="btn gray" id="btn-back">
-                <span class="icon-left">
-                  <svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </span>
-                返回
-              </button>
-            </div>
-            <div class="toolbar-right">
-              <button class="btn" id="btn-add-item">
-                <span class="icon-plus">
-                  <svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg>
-                </span>
-                新增字典项
-              </button>
-            </div>
+        <!-- 顶部吸附工具条：返回 + 保存（保存置顶） -->
+        <div class="sticky-topbar">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn gray" id="btn-back">
+              <span class="icon-left"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              返回
+            </button>
+            <span class="tip-mini">可编辑字典元信息，保存后同步到列表与标题</span>
           </div>
+          <button class="btn" id="btn-save-dict">
+            <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
+              <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>保存
+          </button>
+        </div>
 
-          <!-- 字典元信息编辑区 -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div class="tip-mini">可编辑字典的基础信息，保存后同步到列表与标题</div>
-            <div class="meta-actions">
-              <button class="btn" id="btn-save-dict">
-                <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
-                  <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-                </svg>保存
-              </button>
-            </div>
-          </div>
+        <!-- 元信息表单 -->
+        <div class="card" style="margin-bottom:12px">
           <div class="meta-form">
-            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：annotation_type"></div>
-            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：标注类型"></div>
-            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于标注功能的类型配置"></div>
+            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" placeholder="如：app_market_scene"></div>
+            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" placeholder="如：大模型应用场景"></div>
+            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" placeholder="如：用于应用市场的场景配置"></div>
           </div>
         </div>
 
         <!-- 字典项表格 -->
         <div class="card">
-          <h3 style="margin:6px 2px 10px" id="dict-title">字典项管理 · （未设置编码）</h3>
+          <h3 style="margin:6px 2px 10px" id="dict-title">字典项管理 · 大模型应用场景（app_market_scene）</h3>
           <table>
             <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
             <tbody>
@@ -168,6 +162,12 @@
             </tbody>
           </table>
         </div>
+
+        <!-- 右下角悬浮：新增字典项 -->
+        <button class="fab" id="btn-add-item">
+          <span class="icon-plus"><svg viewBox="0 0 16 16" width="18" height="18"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
+          新增字典项
+        </button>
       </section>
     </main>
   </div>
@@ -196,7 +196,7 @@
     </div>
   </div>
 
-  <!-- 弹窗：新增字典项（演示） -->
+  <!-- 弹窗：新增字典项（示意） -->
   <div id="modal-add" class="modal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true">
       <header>新增字典项</header>
@@ -215,19 +215,19 @@
   </div>
 
 <script>
-/* —— 状态体系（展示用） —— */
+/* —— 状态体系（展示） —— */
 const STATUS = {
-  ENABLED:   {cls:'b-enabled',     text:'启用中',  icon:'🟢'},
-  DRAFT:     {cls:'b-draft',       text:'草稿',    icon:'🟡'},
-  PUBLISHING:{cls:'b-publishing',  text:'发布中',  icon:'🔵'},
-  PUBLISH_FAILED:{cls:'b-failed',  text:'发布失败',icon:'🔴'}
+  ENABLED:{cls:'b-enabled',text:'启用中',icon:'🟢'},
+  DRAFT:{cls:'b-draft',text:'草稿',icon:'🟡'},
+  PUBLISHING:{cls:'b-publishing',text:'发布中',icon:'🔵'},
+  PUBLISH_FAILED:{cls:'b-failed',text:'发布失败',icon:'🔴'}
 };
 
-/* 示例数据：覆盖四种状态 */
+/* 示例数据（列表） */
 let rows = [
   { code:'annotation_type', name:'标注类型', desc:'用于标注功能的类型配置', date:'2025-10-15', status:'ENABLED' },
   { code:'label_template',  name:'标签模板', desc:'标注标签模板集',         date:'2025-10-12', status:'DRAFT' },
-  { code:'review_flag',     name:'发布流程', desc:'发布审批中的配置',         date:'2025-10-14', status:'PUBLISHING' },
+  { code:'review_flow',     name:'发布流程', desc:'发布审批中的配置',         date:'2025-10-14', status:'PUBLISHING' },
   { code:'new_rules',       name:'新规则',   desc:'最近一次发布失败示例',     date:'2025-10-16', status:'PUBLISH_FAILED' }
 ];
 
@@ -252,48 +252,8 @@ const show = id => {
   byId(id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 };
-byId('btn-back').onclick   = ()=>show('page-list');
-byId('btn-add-item').onclick = ()=>openM('add');
 
-/* —— 字典元信息编辑 —— */
-let currentDictCode = null; // 当前正在编辑的字典编码
-
-function fillMetaForm(row) {
-  byId('edit-code').value = row?.code || '';
-  byId('edit-name').value = row?.name || '';
-  byId('edit-desc').value = row?.desc || '';
-  currentDictCode = row ? row.code : null;
-  byId('dict-title').innerHTML =
-    `字典项管理 · ${row?.name || '新字典'}（${row?.code || '未设置编码'}）`;
-}
-function saveMetaForm() {
-  const code = byId('edit-code').value.trim();
-  const name = byId('edit-name').value.trim();
-  const desc = byId('edit-desc').value.trim();
-  if(!code || !name){ alert('“字典编码”和“名称”为必填项'); return; }
-  // 编码唯一校验
-  const exists = rows.some(r => r.code===code && r.code!==currentDictCode);
-  if(exists){ alert('字典编码已存在，请更换'); return; }
-  const now = new Date().toISOString().slice(0,10);
-  if(currentDictCode===null){
-    rows.unshift({code,name,desc,date:now,status:'DRAFT'});
-  }else{
-    rows = rows.map(r=> r.code===currentDictCode ? {...r, code,name,desc} : r);
-  }
-  render();
-  const row = rows.find(r=>r.code===code);
-  fillMetaForm(row);
-  alert('已保存');
-}
-byId('btn-save-dict').onclick = saveMetaForm;
-
-/* 列表页“创建字典”→ 进入项页并清空表单 */
-byId('btn-create').onclick = ()=>{
-  show('page-item');
-  fillMetaForm(null);
-};
-
-/* —— 渲染列表 —— */
+/* —— 列表页渲染 —— */
 const tbody = byId('dict-table').querySelector('tbody');
 let pendingDeleteCode = null;
 
@@ -301,7 +261,6 @@ function badge(status){
   const s = STATUS[status] || STATUS.DRAFT;
   return `<span class="badge ${s.cls}" title="${status}">${s.icon} ${s.text}</span>`;
 }
-
 function render(){
   tbody.innerHTML = '';
   rows.forEach(r=>{
@@ -349,7 +308,7 @@ function render(){
 }
 render();
 
-/* 删除：演示为从列表移除；如需逻辑删除可以改为设置状态 */
+/* 删除：演示为从列表移除 */
 byId('confirm-delete').onclick = ()=>{
   if(pendingDeleteCode){
     rows = rows.filter(r=>r.code!==pendingDeleteCode);
@@ -358,7 +317,48 @@ byId('confirm-delete').onclick = ()=>{
   }
   closeM('del');
 };
+
+/* —— 元信息编辑 —— */
+let currentDictCode = null;
+
+function fillMetaForm(row) {
+  byId('edit-code').value = row?.code || 'app_market_scene';
+  byId('edit-name').value = row?.name || '大模型应用场景';
+  byId('edit-desc').value = row?.desc || '用于应用市场的场景配置';
+  currentDictCode = row ? row.code : null;
+  byId('dict-title').innerHTML =
+    `字典项管理 · ${byId('edit-name').value}（${byId('edit-code').value}）`;
+}
+
+function saveMetaForm() {
+  const code = byId('edit-code').value.trim();
+  const name = byId('edit-name').value.trim();
+  const desc = byId('edit-desc').value.trim();
+  if(!code || !name){ alert('“字典编码”和“名称”为必填项'); return; }
+  const exists = rows.some(r => r.code===code && r.code!==currentDictCode);
+  if(exists){ alert('字典编码已存在，请更换'); return; }
+  const now = new Date().toISOString().slice(0,10);
+  if(currentDictCode===null){
+    rows.unshift({code,name,desc,date:now,status:'DRAFT'});
+  }else{
+    rows = rows.map(r=> r.code===currentDictCode ? {...r, code,name,desc} : r);
+  }
+  render();
+  const row = rows.find(r=>r.code===code);
+  fillMetaForm(row);
+  alert('已保存');
+}
+
+/* 事件绑定 */
+byId('btn-create').onclick = ()=>{ show('page-item'); fillMetaForm(null); };
+byId('btn-back').onclick   = ()=> show('page-list');
+byId('btn-save-dict').onclick = saveMetaForm;
+byId('btn-add-item').onclick  = ()=> openM('add');
+
+/* 首次进入项页时的标题占位 */
+fillMetaForm({code:'app_market_scene',name:'大模型应用场景',desc:'用于应用市场的场景配置'});
 </script>
 </body>
 </html>
+
 
