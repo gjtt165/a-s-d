@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bitahub 运维平台 </title>
+<title>Bitahub 运维平台 · 字典管理原型（新增位于字典项模块右上）</title>
 <style>
   :root{
     --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
@@ -57,12 +57,7 @@
   .page{display:none}
   .page.active{display:block}
 
-  /* “新增字典项”定位在字典项卡片的右下角（随模块滚动） */
-  .card .btn-add-in-card{
-    position:absolute; right:16px; bottom:16px;
-    box-shadow:0 10px 20px rgba(0,102,255,.15)
-  }
-
+  /* ✂️ 删除了旧的右下角悬浮按钮样式 .btn-add-in-card */
   @media (max-width: 960px){
     .sidebar{display:none}
     .main{padding:12px}
@@ -144,10 +139,14 @@
           </div>
         </div>
 
-        <!-- 字典项模块（右下角有“新增字典项”按钮） -->
+        <!-- 字典项模块（新增按钮在右上角） -->
         <div class="card">
           <div class="card-head">
-            <h3 id="dict-title" style="margin:0">字典项管理 · 大模型应用场景（app_market_scene）</h3>
+            <h3 id="dict-title" style="margin:0">字典项管理 · 标注类型（annotation_type）</h3>
+            <button class="btn" id="btn-add-item">
+              <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
+              新增字典项
+            </button>
           </div>
 
           <table>
@@ -158,12 +157,6 @@
               <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td><td><span class="link" data-open="del">删除</span></td></tr>
             </tbody>
           </table>
-
-          <!-- 放在模块右下角 -->
-          <button class="btn btn-add-in-card" id="btn-add-item">
-            <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
-            新增字典项
-          </button>
         </div>
       </section>
     </main>
@@ -356,5 +349,4 @@ fillMetaForm({code:'annotation_type',name:'标注类型',desc:'用于标注功�
 </script>
 </body>
 </html>
-
 
