@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bitahub 运维平台 · 字典管理原型（完整版）</title>
+<title>Bitahub 运维平台 · 字典管理原型（状态可交互版）</title>
 <style>
   :root{
     --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
     --radius:8px;--shadow:0 1px 4px rgba(0,0,0,.08);
+    --green:#28a745;--gray:#a0a5ac;--yellow:#f5b841;--blue:#3b82f6;--red:#dc3545;
   }
   *{box-sizing:border-box} body{margin:0;background:var(--bg);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial}
   .header{background:var(--primary);color:#fff;padding:12px 20px;font-size:18px}
@@ -24,25 +25,34 @@
   .btn.gray{background:#eef2f6;color:#223}
   .input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-width:260px;background:#fff}
   table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;vertical-align:middle}
   th{background:#fafbfc}
-  .status{display:inline-flex;align-items:center;gap:6px}
-  .dot-s{width:8px;height:8px;border-radius:50%}.green{background:#28a745}.red{background:#dc3545}
-  .pagination{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
-  .pagebtn{padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
+  .status{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;border-radius:999px;font-weight:600}
+  .s-enabled{color:var(--green);background:rgba(40,167,69,.12)}
+  .s-disabled{color:var(--gray);background:rgba(160,165,172,.18)}
+  .s-draft{color:var(--yellow);background:rgba(245,184,65,.18)}
+  .s-pending{color:var(--blue);background:rgba(59,130,246,.15)}
+  .s-deleted{color:var(--red);background:rgba(220,53,69,.12)}
   .link{color:var(--primary);cursor:pointer}
   .page{display:none}.page.active{display:block}
+  .dropdown{position:relative;display:inline-block}
+  .drop-btn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer}
+  .drop-menu{display:none;position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--border);border-radius:8px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:10;overflow:hidden}
+  .drop-menu button{display:block;width:100%;text-align:left;background:#fff;border:0;padding:10px 12px;cursor:pointer}
+  .drop-menu button:hover{background:#f5f7fa}
+  .drop-menu.show{display:block}
+
   /* modal */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;padding:16px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;padding:16px;z-index:20}
   .modal.show{display:grid}
-  .dialog{background:#fff;border-radius:10px;min-width:360px;max-width:520px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  .dialog{background:#fff;border-radius:10px;min-width:360px;max-width:560px;border:1px solid var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
   .dialog header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600}
   .dialog main{padding:14px 16px;color:#334}
   .dialog footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
 </style>
 </head>
 <body>
-  <div class="header">云端资源管理系统 · 字典管理原型</div>
+  <div class="header">云端资源管理系统 · 字典管理原型（状态可交互）</div>
   <div class="layout">
     <!-- 左侧导航 -->
     <aside class="sidebar">
@@ -51,7 +61,6 @@
         <a><span class="dot"></span>业务系统管理</a>
         <a><span class="dot"></span>集群管理</a>
         <a><span class="dot"></span>任务管理</a>
-        <!-- 新增：任务管理下面是字典管理 -->
         <a id="menu-dict" class="active"><span class="dot"></span>字典管理</a>
         <a><span class="dot"></span>平台镜像</a>
         <a><span class="dot"></span>监控告警</a>
@@ -69,47 +78,19 @@
               <button class="btn" id="btn-create">➕ 创建字典</button>
               <input class="input" placeholder="搜索：名称/编码" />
             </div>
-            <span style="border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596">点击“编辑/创建字典”进入字典项管理；“删除/查看日志”为弹窗</span>
+            <span style="border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596">下拉菜单可切换状态；保留 查看日志 / 编辑 / 删除</span>
           </div>
 
-          <table>
+          <table id="dict-table">
             <thead>
-              <tr><th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th>操作</th></tr>
+              <tr><th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th style="width:280px">操作</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>annotation_type</td>
-                <td>标注类型</td>
-                <td>用于标注功能的类型配置</td>
-                <td>2025-10-15</td>
-                <td><span class="status"><span class="dot-s green"></span>成功</span></td>
-                <td>
-                  <span class="link" data-open="log">查看日志</span> |
-                  <span class="link" data-goto="item">编辑</span> |
-                  <span class="link" data-open="del">删除</span>
-                </td>
-              </tr>
-              <tr>
-                <td>file_type</td>
-                <td>文件类型</td>
-                <td>上传文件类型限制</td>
-                <td>2025-09-20</td>
-                <td><span class="status"><span class="dot-s green"></span>成功</span></td>
-                <td>
-                  <span class="link" data-open="log">查看日志</span> |
-                  <span class="link" data-goto="item">编辑</span> |
-                  <span class="link" data-open="del">删除</span>
-                </td>
-              </tr>
+              <!-- 行渲染由 JS 注入 -->
             </tbody>
           </table>
-          <div class="pagination">
-            <button class="pagebtn">«</button>
-            <button class="pagebtn">1</button>
-            <button class="pagebtn">2</button>
-            <button class="pagebtn">3</button>
-            <button class="pagebtn">»</button>
-          </div>
+
+          <div style="margin-top:10px;color:#888">状态含义：🟢启用中/⚪停用中/🟡草稿/🔵审核中/🔴已删除</div>
         </div>
       </section>
 
@@ -124,12 +105,9 @@
           <table>
             <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
             <tbody>
-              <tr><td>1</td><td>文字</td><td>text</td><td>启用</td><td>默认类型</td>
-                <td><span class="link" data-open="del">删除</span></td></tr>
-              <tr><td>2</td><td>图片</td><td>image</td><td>启用</td><td>2024新增</td>
-                <td><span class="link" data-open="del">删除</span></td></tr>
-              <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td>
-                <td><span class="link" data-open="del">删除</span></td></tr>
+              <tr><td>1</td><td>文字</td><td>text</td><td>启用</td><td>默认类型</td><td><span class="link" data-open="del">删除</span></td></tr>
+              <tr><td>2</td><td>图片</td><td>image</td><td>启用</td><td>2024新增</td><td><span class="link" data-open="del">删除</span></td></tr>
+              <tr><td>3</td><td>音频</td><td>audio</td><td>启用</td><td>运维新增</td><td><span class="link" data-open="del">删除</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -141,7 +119,7 @@
   <div id="modal-log" class="modal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true">
       <header>操作日志</header>
-      <main>
+      <main id="log-content">
         <div>2025-10-15 创建字典 <b>annotation_type</b></div>
         <div>2025-10-16 新增项 <b>audio</b></div>
       </main>
@@ -151,14 +129,14 @@
     </div>
   </div>
 
-  <!-- 弹窗：删除确认 -->
+  <!-- 弹窗：删除确认（列表页/项页共用） -->
   <div id="modal-del" class="modal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true">
       <header>确认删除</header>
       <main>此操作不可恢复，是否继续？</main>
       <footer>
         <button class="btn gray" data-close="del">取消</button>
-        <button class="btn" data-close="del">确认删除</button>
+        <button class="btn" id="confirm-delete">确认删除</button>
       </footer>
     </div>
   </div>
@@ -182,34 +160,178 @@
   </div>
 
 <script>
-  // 路由切换
-  const show = id => {
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo({top:0,behavior:'smooth'});
-  };
-  document.getElementById('btn-create').onclick = ()=>show('page-item');
-  document.querySelectorAll('[data-goto="item"]').forEach(a=>a.onclick=()=>show('page-item'));
-  document.getElementById('btn-back').onclick = ()=>show('page-list');
+/** —— 数据与工具 —— **/
+const STATUS = {
+  ENABLED:  { cls: 's-enabled',  text: '启用中',  color:'🟢' },
+  DISABLED: { cls: 's-disabled', text: '停用中',  color:'⚪' },
+  DRAFT:    { cls: 's-draft',    text: '草稿',    color:'🟡' },
+  PENDING_REVIEW:{cls:'s-pending',text:'审核中', color:'🔵'},
+  DELETED:  { cls: 's-deleted',  text: '已删除',  color:'🔴' }
+};
+// 初始示例数据：覆盖不同状态
+let rows = [
+  { code:'annotation_type', name:'标注类型', desc:'用于标注功能的类型配置', date:'2025-10-15', status:'ENABLED', logs:['创建','新增项 audio'] },
+  { code:'file_type',       name:'文件类型', desc:'上传文件类型限制',       date:'2025-09-20', status:'DISABLED', logs:['创建','停用'] },
+  { code:'label_template',  name:'标签模板', desc:'标注标签模板集',         date:'2025-08-10', status:'DRAFT', logs:['创建','草稿保存'] },
+  { code:'review_flag',     name:'审核标记', desc:'敏感配置需审核',         date:'2025-10-10', status:'PENDING_REVIEW', logs:['提交审核'] },
+  { code:'old_dict',        name:'历史字典', desc:'已逻辑删除的旧配置',     date:'2024-12-01', status:'DELETED', logs:['删除'] },
+];
 
-  // 模态
-  const open = id => document.getElementById('modal-'+id).classList.add('show');
-  const close = id => document.getElementById('modal-'+id).classList.remove('show');
-
-  document.querySelectorAll('[data-open="log"]').forEach(el=>el.onclick=()=>open('log'));
-  document.querySelectorAll('[data-open="del"]').forEach(el=>el.onclick=()=>open('del'));
-  document.getElementById('btn-add-item').onclick = ()=>open('add');
-
-  document.querySelectorAll('[data-close="log"]').forEach(el=>el.onclick=()=>close('log'));
-  document.querySelectorAll('[data-close="del"]').forEach(el=>el.onclick=()=>close('del'));
-  document.querySelectorAll('[data-close="add"]').forEach(el=>el.onclick=()=>close('add'));
-
-  // 点击蒙层关闭
-  ['log','del','add'].forEach(id=>{
-    document.getElementById('modal-'+id).addEventListener('click',e=>{
-      if(e.target.id==='modal-'+id) close(id);
-    });
+const byId = id => document.getElementById(id);
+const open = id => byId('modal-'+id).classList.add('show');
+const closeM = id => byId('modal-'+id).classList.remove('show');
+['log','del','add'].forEach(id=>{
+  byId('modal-'+id).addEventListener('click',e=>{
+    if(e.target.id==='modal-'+id) closeM(id);
   });
+});
+document.querySelectorAll('[data-close="log"]').forEach(el=>el.onclick=()=>closeM('log'));
+document.querySelectorAll('[data-close="del"]').forEach(el=>el.onclick=()=>closeM('del'));
+document.querySelectorAll('[data-close="add"]').forEach(el=>el.onclick=()=>closeM('add'));
+
+const show = id => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  byId(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+byId('btn-create').onclick = ()=>show('page-item');
+byId('btn-back').onclick = ()=>show('page-list');
+byId('btn-add-item').onclick = ()=>open('add');
+
+/** —— 渲染表格 —— **/
+const tbody = document.querySelector('#dict-table tbody');
+let pendingDeleteCode = null;
+
+function statusBadge(s){
+  const meta = STATUS[s];
+  return `<span class="status ${meta.cls}" title="${s}">${meta.color} ${meta.text}</span>`;
+}
+
+function opsDropdown(row){
+  // 根据当前状态生成可操作项
+  const opsByStatus = {
+    ENABLED: ['停用','删除','查看日志','编辑'],
+    DISABLED:['启用','删除','查看日志','编辑'],
+    DRAFT:   ['提交审核','删除','查看日志','编辑'],
+    PENDING_REVIEW:['审核通过','驳回','查看日志','编辑'],
+    DELETED: ['恢复','查看日志'] // 删除后仅可恢复与看日志
+  };
+  const items = opsByStatus[row.status] || [];
+  const btnId = `drop-${row.code}`;
+  let menu = items.map(op=>`<button data-op="${op}" data-code="${row.code}">${op}</button>`).join('');
+  return `
+    <div class="dropdown">
+      <button class="drop-btn" data-drop="${btnId}">状态操作 ▾</button>
+      <div class="drop-menu" id="${btnId}">
+        ${menu}
+      </div>
+    </div>
+  `;
+}
+
+function render(){
+  tbody.innerHTML = '';
+  rows.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.code}</td>
+      <td>${row.name}</td>
+      <td>${row.desc}</td>
+      <td>${row.date}</td>
+      <td>${statusBadge(row.status)}</td>
+      <td>
+        ${opsDropdown(row)}
+        &nbsp;&nbsp;
+        <span class="link" data-log="${row.code}">查看日志</span> |
+        <span class="link" data-edit="${row.code}">编辑</span> |
+        <span class="link" data-del="${row.code}">删除</span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  bindRowEvents();
+}
+
+function setStatus(code, newStatus){
+  rows = rows.map(r => r.code===code ? {...r, status:newStatus} : r);
+  render();
+}
+
+function bindRowEvents(){
+  // 打开/关闭下拉
+  document.querySelectorAll('[data-drop]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const id = btn.getAttribute('data-drop');
+      // 先收起其他
+      document.querySelectorAll('.drop-menu').forEach(m=>m.classList.remove('show'));
+      byId(id).classList.toggle('show');
+      e.stopPropagation();
+    };
+  });
+  // 点击页面其他处收起
+  document.addEventListener('click', ()=> {
+    document.querySelectorAll('.drop-menu').forEach(m=>m.classList.remove('show'));
+  }, { once:true });
+
+  // 下拉项操作
+  document.querySelectorAll('.drop-menu button').forEach(b=>{
+    b.onclick = ()=>{
+      const op = b.getAttribute('data-op');
+      const code = b.getAttribute('data-code');
+      switch(op){
+        case '启用': setStatus(code,'ENABLED'); break;
+        case '停用': setStatus(code,'DISABLED'); break;
+        case '提交审核': setStatus(code,'PENDING_REVIEW'); break;
+        case '审核通过': setStatus(code,'ENABLED'); break;
+        case '驳回': setStatus(code,'DRAFT'); break;
+        case '恢复': setStatus(code,'DISABLED'); break; // 恢复到停用态，避免直接启用
+        case '删除':
+          pendingDeleteCode = code; open('del'); break;
+        case '查看日志':
+          byId('log-content').innerHTML = `
+            <div>最近操作记录（${code}）：</div>
+            <div>· ${new Date().toLocaleString()} 查看详情</div>
+          `;
+          open('log'); break;
+        case '编辑':
+          show('page-item'); break;
+      }
+    };
+  });
+
+  // 原“查看日志/编辑/删除”保留
+  document.querySelectorAll('[data-log]').forEach(a=>{
+    a.onclick = ()=>{
+      const code = a.getAttribute('data-log');
+      byId('log-content').innerHTML = `
+        <div>操作日志（${code}）</div>
+        <div>· 2025-10-15 创建</div>
+        <div>· 2025-10-16 修改描述</div>
+      `;
+      open('log');
+    };
+  });
+  document.querySelectorAll('[data-edit]').forEach(a=>{
+    a.onclick = ()=> show('page-item');
+  });
+  document.querySelectorAll('[data-del]').forEach(a=>{
+    a.onclick = ()=>{
+      pendingDeleteCode = a.getAttribute('data-del');
+      open('del');
+    };
+  });
+}
+
+// 确认删除 = 置为 DELETED
+byId('confirm-delete').onclick = ()=>{
+  if(pendingDeleteCode){
+    setStatus(pendingDeleteCode,'DELETED');
+    pendingDeleteCode = null;
+  }
+  closeM('del');
+};
+
+render();
 </script>
 </body>
 </html>
