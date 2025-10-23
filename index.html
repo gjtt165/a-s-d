@@ -1,293 +1,673 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>云端资源管理系统 · 字典管理原型</title>
-<style>
-  :root{
-    --primary:#0066ff;--bg:#f5f7fa;--card:#fff;--muted:#666;--border:#e9edf2;
-    --radius:8px;--shadow:0 1px 4px rgba(0,0,0,.08);
-    --green:#22c55e;--yellow:#f59e0b;--blue:#3b82f6;--red:#ef4444;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);font:14px/1.6,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial}
-  .header{background:var(--primary);color:#fff;padding:12px 20px;font-size:18px}
-  .layout{display:flex;min-height:100dvh}
-  .sidebar{width:240px;background:#f8f9fb;border-right:1px solid var(--border);padding:14px}
-  .side-title{color:#999;font-size:12px;margin:6px 10px}
-  .menu a{display:flex;gap:8px;align-items:center;color:#334;text-decoration:none;padding:9px 12px;border-radius:6px;margin:4px 0}
-  .menu a.active{background:#e6f0ff;color:var(--primary);font-weight:600}
-  .menu .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
-  .main{flex:1;padding:18px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP 管理后台原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #fff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --pri: #1677ff;  /* 阿里蓝近似 */
+      --pri-600: #0b5bd3;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --border: #e5e7eb;
+      --chip: #eef4ff;
+      --chip-text: #2450a6;
+      --shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: var(--text); background: var(--bg); }
+    a { color: var(--pri); text-decoration: none; }
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .sidebar { background: #ffffff; border-right: 1px solid var(--border); padding: 16px 12px; position: sticky; top: 0; height: 100vh; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; padding: 8px 10px; }
+    .brand .logo { width: 28px; height: 28px; background: linear-gradient(135deg, #48b1fb, #06d6a0); border-radius: 8px; }
+    .nav { margin-top: 10px; }
+    .nav h4 { margin: 18px 10px 8px; font-size: 12px; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    .nav button { width: 100%; text-align: left; background: transparent; border: 0; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; color: var(--text); cursor: pointer; }
+    .nav button:hover { background: #f3f6ff; }
+    .nav button.active { background: var(--chip); color: var(--chip-text); font-weight: 600; }
+    .nav .icon { width: 18px; height: 18px; opacity: .9; }
 
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;position:relative}
-  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
-  .hint{color:#8a8f98;font-size:12px}
+    .content { padding: 22px 28px; }
+    .topbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+    .search { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; min-width: 380px; box-shadow: var(--shadow); }
+    .search input { border: 0; outline: 0; width: 100%; font-size: 14px; }
+    .actions { display: flex; gap: 10px; }
+    .btn { border: 1px solid var(--border); background: #fff; color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn.primary { background: var(--pri); color: #fff; border-color: var(--pri); }
+    .btn.ghost { background: transparent; }
 
-  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-  .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px}
-  .input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;min-width:120px;background:#fff}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
-  th{background:#fafbfc}
-  .link{color:var(--primary);cursor:pointer}
-  .note{border:1px dashed var(--border);padding:6px 8px;border-radius:6px;color:#596}
+    .page { margin-top: 18px; display: grid; gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card h3 { margin: 0; padding: 16px 16px 0; font-size: 18px; }
+    .card .sub { padding: 6px 16px 0; color: var(--muted); font-size: 13px; }
+    .card .body { padding: 14px 16px 16px; }
 
-  .btn{border:0;border-radius:6px;background:var(--primary);color:#fff;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-  .btn:hover{filter:brightness(.96)}
-  .btn.gray{background:#eef2f6;color:#223}
-  .btn .icon-plus svg path{fill:#fff;stroke:#fff}
-  .btn .icon-left svg path{stroke:#222}
+    table { width: 100%; border-collapse: collapse; }
+    th, td { font-size: 14px; padding: 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+    th { color: #475569; font-weight: 600; background: #fbfcff; position: sticky; top: 0; }
 
-  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600}
-  .b-enabled{color:var(--green);background:rgba(34,197,94,.12)}
-  .b-draft{color:var(--yellow);background:rgba(245,158,11,.16)}
-  .b-publishing{color:var(--blue);background:rgba(59,130,246,.16)}
-  .b-failed{color:var(--red);background:rgba(239,68,68,.14)}
+    .tag { padding: 4px 8px; border-radius: 999px; background: #f3f4f6; color: #334155; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+    .status { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .s-ok { background: #ecfdf5; color: #065f46; }
+    .s-warn { background: #fffbeb; color: #92400e; }
+    .s-bad { background: #fef2f2; color: #991b1b; }
+    .s-idle { background: #eef4ff; color: #1d4ed8; }
 
-  .page{display:none}
-  .page.active{display:block}
+    .toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .filters { display: flex; gap: 8px; }
+    select, input[type="datetime-local"], input[type="number"], input[type="text"], input[type="url"], textarea { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; background: #fff; }
+    textarea { min-height: 80px; resize: vertical; }
 
-  .meta-form{display:grid;grid-template-columns:160px 1fr;gap:10px 12px}
-  .meta-form label{color:#555;align-self:center}
-  .meta-form .row{display:contents}
+    /* modal */
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,.42); z-index: 50; }
+    .modal.show { display: flex; }
+    .dialog { background: #fff; width: min(940px, 92vw); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
+    .dialog header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .dialog header h4 { margin: 0; font-size: 16px; }
+    .dialog .content { padding: 16px; }
+    .grid { display: grid; gap: 12px; }
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 13px; color: var(--muted); }
+    .help { font-size: 12px; color: var(--muted); }
+    .chip { padding: 4px 8px; font-size: 12px; background: var(--chip); color: var(--chip-text); border-radius: 999px; }
+    .muted { color: var(--muted); }
+    .right { text-align: right; }
+    .empty { padding: 12px; color: var(--muted); font-size: 14px; }
 
-  @media (max-width: 960px){
-    .sidebar{display:none}
-    .main{padding:12px}
-  }
-</style>
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .search { min-width: 0; width: 100%; }
+    }
+  </style>
 </head>
 <body>
-  <div class="header">云端资源管理系统 · 字典管理原型</div>
-
   <div class="layout">
     <aside class="sidebar">
-      <div class="side-title">导航</div>
-      <nav class="menu">
-        <a><span class="dot"></span>业务系统管理</a>
-        <a><span class="dot"></span>集群管理</a>
-        <a><span class="dot"></span>任务管理</a>
-        <a class="active"><span class="dot"></span>字典管理</a>
-        <a><span class="dot"></span>平台镜像</a>
-        <a><span class="dot"></span>监控告警</a>
-        <a><span class="dot"></span>API配置</a>
-      </nav>
+      <div class="brand"><div class="logo"></div> MCP 管理后台</div>
+      <div class="nav">
+        <h4>业务</h4>
+        <button data-route="apps" class="active"><span class="icon">🧩</span> 模型应用管理</button>
+        <button data-route="tags"><span class="icon">🏷️</span> 模型应用标签</button>
+        <button data-route="biz-apps"><span class="icon">🏢</span> 企业应用管理</button>
+        <button data-route="audit"><span class="icon">✅</span> 企业应用审核</button>
+        <button data-route="categories"><span class="icon">🗂️</span> 企业应用分类</button>
+        <h4>运维</h4>
+        <button data-route="monitor"><span class="icon">📈</span> 服务监控（示意）</button>
+      </div>
+      <div style="position:absolute; bottom:14px; left:14px; right:14px;">
+        <div class="card">
+          <div class="body" style="display:flex; align-items:center; gap:10px;">
+            <div class="chip">演示环境</div>
+            <div class="muted" style="font-size:12px;">数据存储在浏览器 LocalStorage</div>
+          </div>
+        </div>
+      </div>
     </aside>
 
-    <main class="main">
-      <!-- =================== 页 1：字典列表 =================== -->
-      <section id="page-list" class="page active">
-        <div class="card">
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <button class="btn" id="btn-create">
-                <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
-                创建字典
-              </button>
-              <input id="search" class="input" placeholder="搜索：名称/编码" />
-            </div>
-            <div class="toolbar-right">
-              <span class="note">状态仅展示：🟢启用中 / 🟡草稿 / 🔵发布中 / 🔴发布失败</span>
-            </div>
-          </div>
+    <main class="content">
+      <div class="topbar">
+        <div class="search"><span>🔎</span><input id="globalSearch" placeholder="搜索 应用/企业/标签… (按 Enter)" /></div>
+        <div class="actions"><button class="btn ghost" id="exportBtn">导出数据</button><button class="btn primary" id="importBtn">导入数据</button></div>
+      </div>
 
-          <table id="dict-table">
-            <thead>
-            <tr>
-              <th>字典编码</th><th>名称</th><th>描述</th><th>创建时间</th><th>状态</th><th style="width:220px">操作</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- =================== 页 2：字典项编辑 =================== -->
-      <section id="page-item" class="page">
-        <div class="card" style="margin-bottom:12px">
-          <div class="card-head">
-            <div style="display:flex;align-items:center;gap:10px">
-              <button class="btn gray" id="btn-back">
-                <span class="icon-left"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M9.5 3L4.5 8l5 5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                返回
-              </button>
-              <span class="hint">可编辑字典元信息，保存后同步到列表与标题</span>
-            </div>
-            <button class="btn" id="btn-save-dict">
-              <svg viewBox="0 0 16 16" width="16" height="16" style="margin-right:6px">
-                <path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-              </svg>保存
-            </button>
-          </div>
-
-          <div class="meta-form">
-            <div class="row"><label for="edit-code">字典编码</label><input id="edit-code" class="input" value=""></div>
-            <div class="row"><label for="edit-name">名称</label><input id="edit-name" class="input" value=""></div>
-            <div class="row"><label for="edit-desc">描述</label><input id="edit-desc" class="input" value=""></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head">
-            <h3 id="dict-title" style="margin:0">字典项管理 · （未设置）</h3>
-            <button class="btn" id="btn-add-item">
-              <span class="icon-plus"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M8 3v10M3 8h10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="#fff"/></svg></span>
-              新增字典项
-            </button>
-          </div>
-          <table id="dict-item-table">
-            <thead><tr><th>排序</th><th>Label</th><th>Value</th><th>备注</th><th>操作</th></tr></thead>
-            <tbody id="dict-item-body"></tbody>
-          </table>
-        </div>
-      </section>
+      <section id="page" class="page"></section>
     </main>
   </div>
 
-<script>
-/* ========== 状态（列表页展示徽章） ========== */
-const STATUS = {
-  ENABLED:{cls:'b-enabled',text:'启用中',icon:'🟢'},
-  DRAFT:{cls:'b-draft',text:'草稿',icon:'🟡'},
-  PUBLISHING:{cls:'b-publishing',text:'发布中',icon:'🔵'},
-  PUBLISH_FAILED:{cls:'b-failed',text:'发布失败',icon:'🔴'}
-};
+  <!-- 共用弹窗：发布模型应用 -->
+  <div class="modal" id="modal-app">
+    <div class="dialog">
+      <header>
+        <h4>发布模型应用</h4>
+        <button class="btn" data-close="#modal-app">关闭</button>
+      </header>
+      <div class="content">
+        <form id="form-app" class="grid g3">
+          <div class="field"><label>应用名称 *</label><input name="name" required placeholder="如：通义万相-图像生成"/></div>
+          <div class="field"><label>默认副本数 *</label><input type="number" min="0" name="replicas" value="1" required/></div>
+          <div class="field"><label>节点配置 *</label><input name="node" placeholder="如：2CPU 8G / 1xA10 24G" required/></div>
 
-/* ========== 模拟数据：列表 ========== */
-let dictRows = [
-  { code:'annotation_type', name:'标注类型', desc:'用于标注功能的类型配置', date:'2025-10-15', status:'ENABLED',
-    items:[ {label:'文字',value:'text',remark:'默认类型'}, {label:'图片',value:'image',remark:'2024新增'}, {label:'音频',value:'audio',remark:'运维新增'} ]},
-  { code:'label_template',  name:'标签模板', desc:'标注标签模板集',         date:'2025-10-12', status:'DRAFT',
-    items:[ {label:'合格',value:'ok',remark:''} ] },
-  { code:'review_flow',     name:'发布流程', desc:'发布审批中的配置',         date:'2025-10-14', status:'PUBLISHING',
-    items:[ ] },
-  { code:'new_rules',       name:'新规则',   desc:'最近一次发布失败示例',     date:'2025-10-16', status:'PUBLISH_FAILED',
-    items:[ ] }
-];
+          <div class="field"><label>启动命令 *</label><input name="cmd" placeholder="python serve.py --port=8000" required/></div>
+          <div class="field"><label>服务地址 *</label><input type="url" name="svc" placeholder="https://svc.example.com" required/></div>
+          <div class="field"><label>网关配置</label><input name="gateway" placeholder="/mcp/xxx, 端口等"/></div>
 
-/* DOM & 工具 */
-const $ = s => document.querySelector(s);
-const byId = id => document.getElementById(id);
-function show(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); byId(id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'}); }
+          <div class="field"><label>API 认证</label><input name="apikey" placeholder="可为空，或选择免认证"/></div>
+          <div class="field"><label>标签（逗号分隔）</label><input name="tags" placeholder="CV,生成,热门"/></div>
+          <div class="field"><label>描述</label><input name="desc" placeholder="一句话介绍此模型服务"/></div>
 
-/* ========== 第一页：渲染列表 ========== */
-const tbodyList = byId('dict-table').querySelector('tbody');
-function badge(status){ const s=STATUS[status]||STATUS.DRAFT; return `<span class="badge ${s.cls}">${s.icon} ${s.text}</span>`; }
-function renderList(filter=''){
-  tbodyList.innerHTML='';
-  dictRows
-    .filter(r=>!filter || r.code.includes(filter)||r.name.includes(filter))
-    .forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${r.code}</td>
-        <td>${r.name}</td>
-        <td>${r.desc}</td>
-        <td>${r.date}</td>
-        <td>${badge(r.status)}</td>
-        <td>
-          <span class="link" data-log="${r.code}">查看日志</span> |
-          <span class="link" data-edit="${r.code}">编辑</span> |
-          <span class="link" data-del="${r.code}">删除</span>
-        </td>`;
-      tbodyList.appendChild(tr);
+          <div class="field"><label>连续未使用 N 分钟后缩容至 0 *</label><input type="number" min="0" name="idleToZero" value="15"/></div>
+          <div class="field"><label>快速唤醒（冷启优化）</label>
+            <select name="fastWarm">
+              <option value="on">开启</option>
+              <option value="off">关闭</option>
+            </select>
+          </div>
+          <div class="field"><label>状态</label>
+            <select name="status">
+              <option value="running">运行中</option>
+              <option value="pending">待部署</option>
+              <option value="idle">缩容到0</option>
+            </select>
+          </div>
+
+          <div class="field g3" style="grid-column: 1 / -1;">
+            <label>弹性伸缩策略</label>
+            <div class="grid g3">
+              <div class="field">
+                <label>依据</label>
+                <select name="scaleBasis">
+                  <option value="metrics">基于监控指标</option>
+                  <option value="events">基于事件源</option>
+                  <option value="cron">基于 Cron 表达式</option>
+                </select>
+              </div>
+              <div class="field"><label>自定义指标</label><input name="metric" placeholder="GPU 使用率 / QPS / 入站流量"/></div>
+              <div class="field"><label>Cron 表达式</label><input name="cron" placeholder="*/5 * * * *"/></div>
+            </div>
+            <div class="help">说明：可在审核环节进一步细化策略；此处为默认策略。</div>
+          </div>
+
+          <div class="right" style="grid-column:1 / -1; margin-top:4px;">
+            <button class="btn" type="button" data-close="#modal-app">取消</button>
+            <button class="btn primary" type="submit">保存并发布</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共用弹窗：新增标签 -->
+  <div class="modal" id="modal-tag">
+    <div class="dialog">
+      <header>
+        <h4>新增标签</h4>
+        <button class="btn" data-close="#modal-tag">关闭</button>
+      </header>
+      <div class="content">
+        <form id="form-tag" class="grid g2">
+          <div class="field"><label>标签名 *</label><input name="name" required placeholder="如：图像生成"/></div>
+          <div class="field"><label>是否首页推荐</label>
+            <select name="featured">
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column: 1 / -1"><label>描述</label><input name="desc" placeholder="该标签的说明"/></div>
+          <div class="right" style="grid-column: 1 / -1">
+            <button class="btn" type="button" data-close="#modal-tag">取消</button>
+            <button class="btn primary" type="submit">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共用弹窗：企业应用发布/审核（复用） -->
+  <div class="modal" id="modal-biz">
+    <div class="dialog">
+      <header>
+        <h4 id="biz-title">发布企业应用</h4>
+        <button class="btn" data-close="#modal-biz">关闭</button>
+      </header>
+      <div class="content">
+        <form id="form-biz" class="grid g3">
+          <div class="field"><label>企业名称 *</label><input name="corp" required placeholder="如：中科类脑"/></div>
+          <div class="field"><label>应用名称 *</label><input name="name" required placeholder="如：企业智能问答"/></div>
+          <div class="field"><label>镜像包 *</label><input name="image" required placeholder="registry.example.com/qa:1.0.0"/></div>
+
+          <div class="field"><label>资源申请（CPU/GPU/内存）*</label><input name="res" required placeholder="2C/8G/1xA10"/></div>
+          <div class="field"><label>最大进程数 *</label><input type="number" min="1" name="maxProc" value="4"/></div>
+          <div class="field"><label>副本可为 0</label>
+            <select name="zeroReplica">
+              <option value="true">允许</option>
+              <option value="false">不允许</option>
+            </select>
+          </div>
+
+          <div class="field"><label>发布时间</label><input type="datetime-local" name="publishAt"/></div>
+          <div class="field"><label>是否自动下架</label>
+            <select name="autoOff">
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </div>
+          <div class="field"><label>下架时间</label><input type="datetime-local" name="offAt"/></div>
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label>弹性伸缩策略</label>
+            <div class="grid g3">
+              <div class="field">
+                <label>依据</label>
+                <select name="scaleBasis">
+                  <option value="metrics">监控指标</option>
+                  <option value="events">事件源</option>
+                  <option value="cron">Cron 表达式</option>
+                </select>
+              </div>
+              <div class="field"><label>自定义指标</label><input name="metric" placeholder="GPU 使用率 / QPS / 入站流量"/></div>
+              <div class="field"><label>Cron 表达式</label><input name="cron" placeholder="*/10 * * * *"/></div>
+            </div>
+            <div class="help">说明：支持基于事件源、监控指标、cron 的弹性伸缩；提升集群利用率。</div>
+          </div>
+
+          <div class="right" style="grid-column:1 / -1;">
+            <button class="btn" type="button" data-close="#modal-biz">取消</button>
+            <button class="btn primary" type="submit">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 共用弹窗：分类配置 -->
+  <div class="modal" id="modal-cat">
+    <div class="dialog">
+      <header>
+        <h4>编辑分类模块</h4>
+        <button class="btn" data-close="#modal-cat">关闭</button>
+      </header>
+      <div class="content">
+        <form id="form-cat" class="grid g2">
+          <div class="field"><label>分类名称 *</label><input name="name" required placeholder="如：新品推荐"/></div>
+          <div class="field"><label>排序权重</label><input type="number" name="weight" value="10"/></div>
+          <div class="field" style="grid-column: 1 / -1"><label>关联应用（用逗号分隔应用名）</label><textarea name="apps" placeholder="应用A, 应用B, 应用C"></textarea></div>
+          <div class="field"><label>是否在前端展示</label>
+            <select name="visible"><option value="true">是</option><option value="false">否</option></select>
+          </div>
+          <div class="field"><label>类型</label>
+            <select name="type">
+              <option value="system">系统预设</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div class="right" style="grid-column: 1 / -1">
+            <button class="btn" type="button" data-close="#modal-cat">取消</button>
+            <button class="btn primary" type="submit">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 简易状态管理与存储 ---
+    const DB_KEY = 'mcp-admin-demo-db-v1';
+    const db = loadDB();
+
+    function loadDB(){
+      try {
+        const raw = localStorage.getItem(DB_KEY);
+        if(raw) return JSON.parse(raw);
+      } catch(e) {}
+      // 初始数据
+      const init = {
+        apps: [
+          { id: uid(), name:'通义万相-图像生成', cmd:'python serve.py --port=8000', replicas:1, node:'1xA10 24G', svc:'https://imggen.svc.local', gateway:'/mcp/img', apikey:'', tags:['CV','生成'], desc:'文生图服务', idleToZero:15, fastWarm:'on', status:'running', scaleBasis:'metrics', metric:'GPU 使用率>60%', cron:'' , createdAt: Date.now() - 1000*60*60 },
+          { id: uid(), name:'通义千问-语音合成', cmd:'bash run.sh', replicas:2, node:'2CPU 8G', svc:'https://tts.svc.local', gateway:'/mcp/tts', apikey:'k-***', tags:['语音','TTS'], desc:'语音合成', idleToZero:30, fastWarm:'off', status:'idle', scaleBasis:'cron', metric:'', cron:'*/10 * * * *' , createdAt: Date.now() - 1000*60*30 }
+        ],
+        tags: [
+          { id: uid(), name:'图像生成', featured:false, desc:'计算机视觉-生成方向', createdAt: Date.now()-1_000_000 },
+          { id: uid(), name:'语音', featured:true, desc:'ASR/TTS', createdAt: Date.now()-2_000_000 }
+        ],
+        bizApps: [
+          { id: uid(), corp:'中科类脑', name:'企业智能问答', image:'registry/acme-qa:1.0', res:'2C/8G', maxProc:4, zeroReplica:true, publishAt:'', autoOff:false, offAt:'', scaleBasis:'metrics', metric:'QPS>50', cron:'', status:'上架', createdAt: Date.now()-900000 },
+          { id: uid(), corp:'星云科技', name:'合同要点抽取', image:'registry/pie:2.1', res:'1C/4G', maxProc:2, zeroReplica:false, publishAt:'', autoOff:true, offAt:'', scaleBasis:'cron', metric:'', cron:'0 0 * * *', status:'下架', createdAt: Date.now()-600000 }
+        ],
+        audits: [
+          { id: uid(), corp:'海纳数据', name:'客服质检', image:'registry/qa:0.9', res:'2C/8G/1xA10', submitter:'wang', submittedAt: Date.now()-3600_000, status:'待审', config:{} }
+        ],
+        categories: [
+          { id: uid(), name:'新品推荐', weight:10, apps:['通义万相-图像生成'], visible:true, type:'system', updatedAt: Date.now()-120000 },
+          { id: uid(), name:'精品推荐', weight:20, apps:['企业智能问答','合同要点抽取'], visible:true, type:'system', updatedAt: Date.now()-220000 },
+          { id: uid(), name:'优惠专区', weight:30, apps:[], visible:false, type:'system', updatedAt: Date.now()-320000 }
+        ]
+      };
+      saveDB(init);
+      return init;
+    }
+
+    function saveDB(data){ localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+    function uid(){ return Math.random().toString(36).slice(2,9); }
+
+    // --- 路由 ---
+    const page = document.getElementById('page');
+    const navButtons = [...document.querySelectorAll('.nav button[data-route]')];
+    navButtons.forEach(btn => btn.addEventListener('click', () => goto(btn.dataset.route)));
+    window.addEventListener('hashchange', syncRoute);
+
+    function goto(route){ location.hash = '#' + route; }
+    function syncRoute(){
+      const route = location.hash.replace('#','') || 'apps';
+      navButtons.forEach(b => b.classList.toggle('active', b.dataset.route===route));
+      render(route);
+    }
+
+    // --- 渲染 ---
+    function render(route){
+      if(route==='apps') return renderApps();
+      if(route==='tags') return renderTags();
+      if(route==='biz-apps') return renderBizApps();
+      if(route==='audit') return renderAudit();
+      if(route==='categories') return renderCategories();
+      if(route==='monitor') return renderMonitor();
+      page.innerHTML = '<div class="empty">未实现的页面</div>';
+    }
+
+    // 工具: 通用表格操作列
+    function opButtons(defs){
+      return defs.map(d=>`<button class="btn" data-op="${d.op}" data-id="${d.id}">${d.text}</button>`).join(' ');
+    }
+
+    // --- 页面：模型应用管理 ---
+    function renderApps(){
+      const rows = db.apps.sort((a,b)=>b.createdAt-a.createdAt).map(a=>`
+        <tr>
+          <td>${a.name}</td>
+          <td><code>${a.cmd}</code></td>
+          <td>${a.replicas}</td>
+          <td>${a.node}</td>
+          <td><a href="${a.svc}" target="_blank">${a.svc}</a></td>
+          <td>${statusPill(a.status)}</td>
+          <td>${new Date(a.createdAt).toLocaleString()}</td>
+          <td>
+            ${opButtons([
+              {op:'view-app', id:a.id, text:'查看'},
+              {op:'edit-app', id:a.id, text:'编辑'},
+              {op:'remove-app', id:a.id, text:'下线'}
+            ])}
+          </td>
+        </tr>
+      `).join('');
+
+      page.innerHTML = `
+        <div class="card">
+          <h3>模型应用管理</h3>
+          <div class="sub">通过市场表单发布的模型会在此处以“应用服务”形式呈现，可查看部署详情、API 配置、伸缩策略等。</div>
+          <div class="body">
+            <div class="toolbar">
+              <div class="filters">
+                <select id="appsFilter">
+                  <option value="">全部状态</option>
+                  <option value="running">运行中</option>
+                  <option value="pending">待部署</option>
+                  <option value="idle">缩容到0</option>
+                </select>
+              </div>
+              <div>
+                <button class="btn" id="btn-export-apps">导出</button>
+                <button class="btn primary" id="btn-new-app">+ 发布模型应用</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>应用名称</th><th>启动命令</th><th>副本数</th><th>节点配置</th><th>服务地址</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+                <tbody id="appsTbody">${rows || '<tr><td colspan="8" class="empty">暂无数据</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>`;
+
+      // 事件绑定
+      document.getElementById('btn-new-app').onclick = ()=> openModal('#modal-app', fillForm('#form-app', null));
+      document.getElementById('btn-export-apps').onclick = ()=> downloadJSON('apps.json', db.apps);
+      document.getElementById('appsFilter').onchange = (e)=>{
+        const val = e.target.value;
+        const filtered = db.apps.filter(a=> !val || a.status===val);
+        document.getElementById('appsTbody').innerHTML = filtered.map(a=>`
+          <tr>
+            <td>${a.name}</td>
+            <td><code>${a.cmd}</code></td>
+            <td>${a.replicas}</td>
+            <td>${a.node}</td>
+            <td><a href="${a.svc}" target="_blank">${a.svc}</a></td>
+            <td>${statusPill(a.status)}</td>
+            <td>${new Date(a.createdAt).toLocaleString()}</td>
+            <td>${opButtons([{op:'view-app', id:a.id, text:'查看'},{op:'edit-app', id:a.id, text:'编辑'},{op:'remove-app', id:a.id, text:'下线'}])}</td>
+          </tr>`).join('');
+        bindRowOps('appsTbody');
+      };
+      bindRowOps('appsTbody');
+    }
+
+    function statusPill(s){
+      const map = { running:'s-ok', pending:'s-warn', idle:'s-idle', error:'s-bad' };
+      const text = { running:'运行中', pending:'待部署', idle:'缩容到0', error:'异常' };
+      return `<span class="status ${map[s]||'s-warn'}">${text[s]||s}</span>`;
+    }
+
+    function bindRowOps(tbodyId){
+      document.getElementById(tbodyId).querySelectorAll('button[data-op]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const {op, id} = btn.dataset;
+          if(op==='remove-app'){ db.apps = db.apps.filter(x=>x.id!==id); saveDB(db); renderApps(); return; }
+          if(op==='edit-app'){ const app = db.apps.find(x=>x.id===id); openModal('#modal-app', fillForm('#form-app', app)); return; }
+          if(op==='view-app'){ const app = db.apps.find(x=>x.id===id); alert('API 网关: '+app.gateway+'\n认证: '+(app.apikey||'无')); return; }
+          if(op==='remove-tag'){ db.tags = db.tags.filter(x=>x.id!==id); saveDB(db); renderTags(); return; }
+          if(op==='edit-tag'){ const t = db.tags.find(x=>x.id===id); openModal('#modal-tag', fillForm('#form-tag', t)); return; }
+          if(op==='remove-biz'){ db.bizApps = db.bizApps.filter(x=>x.id!==id); saveDB(db); renderBizApps(); return; }
+          if(op==='edit-biz'){ const it = db.bizApps.find(x=>x.id===id); openModal('#modal-biz', fillForm('#form-biz', it)); return; }
+          if(op==='approve'){ const a = db.audits.find(x=>x.id===id); a.status='通过'; saveDB(db); renderAudit(); return; }
+          if(op==='reject'){ const a = db.audits.find(x=>x.id===id); a.status='拒绝'; saveDB(db); renderAudit(); return; }
+          if(op==='config'){ const a = db.audits.find(x=>x.id===id); openModal('#modal-biz', fillForm('#form-biz', { corp:a.corp, name:a.name, image:a.image, res:a.res, maxProc:4, zeroReplica:true, publishAt:'', autoOff:false, offAt:'', scaleBasis:'metrics', metric:'', cron:'' })); return; }
+          if(op==='remove-cat'){ db.categories = db.categories.filter(x=>x.id!==id); saveDB(db); renderCategories(); return; }
+          if(op==='edit-cat'){ const c = db.categories.find(x=>x.id===id); openModal('#modal-cat', fillForm('#form-cat', c)); document.getElementById('form-cat').dataset.editId = c.id; return; }
+        });
+      });
+    }
+
+    // --- 页面：标签 ---
+    function renderTags(){
+      const rows = db.tags.map(t=>`
+        <tr>
+          <td>${t.name}</td>
+          <td>${t.featured?'是':'否'}</td>
+          <td>${t.desc||''}</td>
+          <td>${new Date(t.createdAt).toLocaleString()}</td>
+          <td>${opButtons([{op:'edit-tag', id:t.id, text:'编辑'},{op:'remove-tag', id:t.id, text:'删除'}])}</td>
+        </tr>`).join('');
+      page.innerHTML = `
+        <div class="card">
+          <h3>模型应用标签管理</h3>
+          <div class="sub">维护标签并与应用关联，支持用户在前台按标签快速筛选。</div>
+          <div class="body">
+            <div class="toolbar"><div></div><button class="btn primary" id="btn-new-tag">+ 新增标签</button></div>
+            <table>
+              <thead><tr><th>标签名</th><th>首页推荐</th><th>描述</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody id="tagsTbody">${rows || '<tr><td colspan="5" class="empty">暂无标签</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>`;
+      document.getElementById('btn-new-tag').onclick = ()=> openModal('#modal-tag', fillForm('#form-tag', null));
+      bindRowOps('tagsTbody');
+    }
+
+    // --- 页面：企业应用管理 ---
+    function renderBizApps(){
+      const rows = db.bizApps.map(b=>`
+        <tr>
+          <td>${b.name}</td>
+          <td>${b.corp}</td>
+          <td>${b.status}</td>
+          <td>${b.publishAt ? new Date(b.publishAt).toLocaleString() : '-'}</td>
+          <td>${b.offAt ? new Date(b.offAt).toLocaleString() : '-'}</td>
+          <td>${opButtons([{op:'edit-biz', id:b.id, text:'编辑'},{op:'remove-biz', id:b.id, text:'删除'}])}</td>
+        </tr>`).join('');
+      page.innerHTML = `
+        <div class="card">
+          <h3>企业应用管理</h3>
+          <div class="sub">支持企业应用的发布与下架，可设置发布时间与定时下架。</div>
+          <div class="body">
+            <div class="toolbar"><div></div><button class="btn primary" id="btn-new-biz">+ 发布企业应用</button></div>
+            <table>
+              <thead><tr><th>应用名</th><th>企业</th><th>状态</th><th>发布时间</th><th>下架时间</th><th>操作</th></tr></thead>
+              <tbody id="bizTbody">${rows || '<tr><td colspan="6" class="empty">暂无企业应用</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>`;
+      document.getElementById('btn-new-biz').onclick = ()=> openModal('#modal-biz', fillForm('#form-biz', null));
+      bindRowOps('bizTbody');
+    }
+
+    // --- 页面：企业应用审核 ---
+    function renderAudit(){
+      const rows = db.audits.map(a=>`
+        <tr>
+          <td>${a.corp}</td>
+          <td>${a.name}</td>
+          <td><code>${a.image}</code></td>
+          <td>${a.res}</td>
+          <td>${new Date(a.submittedAt).toLocaleString()}</td>
+          <td>${a.status}</td>
+          <td>
+            ${opButtons([
+              {op:'config', id:a.id, text:'配置策略'},
+              {op:'approve', id:a.id, text:'通过'},
+              {op:'reject', id:a.id, text:'拒绝'}
+            ])}
+          </td>
+        </tr>`).join('');
+      page.innerHTML = `
+        <div class="card">
+          <h3>企业应用审核</h3>
+          <div class="sub">基于申请的资源占用与镜像信息，配置调用策略、最大进程数、副本为0策略以及弹性伸缩依据。</div>
+          <div class="body">
+            <table>
+              <thead><tr><th>企业</th><th>应用名</th><th>镜像包</th><th>资源申请</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="auditTbody">${rows || '<tr><td colspan="7" class="empty">暂无待审记录</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>`;
+      bindRowOps('auditTbody');
+    }
+
+    // --- 页面：分类管理 ---
+    function renderCategories(){
+      const rows = db.categories.sort((a,b)=>a.weight-b.weight).map(c=>`
+        <tr>
+          <td>${c.name}</td>
+          <td>${c.type==='system'?'系统预设':'自定义'}</td>
+          <td>${c.visible?'显示':'隐藏'}</td>
+          <td>${c.weight}</td>
+          <td>${(c.apps||[]).join(', ')||'-'}</td>
+          <td>${new Date(c.updatedAt).toLocaleString()}</td>
+          <td>${opButtons([{op:'edit-cat', id:c.id, text:'编辑'},{op:'remove-cat', id:c.id, text:'删除'}])}</td>
+        </tr>`).join('');
+      page.innerHTML = `
+        <div class="card">
+          <h3>企业应用分类管理</h3>
+          <div class="sub">维护新品推荐、精品推荐、优惠专区等模块。</div>
+          <div class="body">
+            <div class="toolbar"><div></div><button class="btn primary" id="btn-new-cat">+ 新增分类</button></div>
+            <table>
+              <thead><tr><th>分类名称</th><th>类型</th><th>前端显示</th><th>权重</th><th>关联应用</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody id="catTbody">${rows || '<tr><td colspan="7" class="empty">暂无分类</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>`;
+      document.getElementById('btn-new-cat').onclick = ()=> { document.getElementById('form-cat').dataset.editId = ''; openModal('#modal-cat', fillForm('#form-cat', null)); };
+      bindRowOps('catTbody');
+    }
+
+    // --- 页面：监控示意 ---
+    function renderMonitor(){
+      const cards = db.apps.map(a=>`
+        <div class="card"><div class="body">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:700">${a.name}</div>
+              <div class="muted" style="font-size:12px">副本：${a.replicas} ｜ 节点：${a.node} ｜ 状态：${a.status}</div>
+            </div>
+            <span class="chip">${a.metric || 'QPS, GPU, 入站流量'}</span>
+          </div>
+          <div style="height:8px"></div>
+          <div style="height:10px;background:linear-gradient(90deg, #c7d2fe, #93c5fd); border-radius:999px"></div>
+        </div></div>
+      `).join('');
+      page.innerHTML = `<div class="grid g2">${cards}</div>`;
+    }
+
+    // --- 表单提交处理 ---
+    document.getElementById('form-app').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const f = new FormData(e.target); const d = Object.fromEntries(f.entries());
+      d.replicas = +d.replicas; d.idleToZero = +d.idleToZero; d.tags = (d.tags||'').split(',').map(s=>s.trim()).filter(Boolean);
+      if(e.target.dataset.editId){
+        const i = db.apps.findIndex(x=>x.id===e.target.dataset.editId); d.id = db.apps[i].id; d.createdAt = db.apps[i].createdAt; db.apps[i] = d;
+      } else { d.id = uid(); d.createdAt = Date.now(); db.apps.unshift(d); }
+      saveDB(db); closeModal('#modal-app'); renderApps(); e.target.reset(); e.target.dataset.editId='';
     });
 
-  document.querySelectorAll('[data-log]').forEach(a=>a.onclick=()=>alert('（示例）打开日志：'+a.dataset.log));
-  document.querySelectorAll('[data-edit]').forEach(a=>a.onclick=()=>openEditor(a.dataset.edit));
-  document.querySelectorAll('[data-del]').forEach(a=>a.onclick=()=>{
-    const code=a.dataset.del;
-    if(confirm('确认删除字典：'+code+' ？')){
-      dictRows=dictRows.filter(r=>r.code!==code);
-      renderList(byId('search').value.trim());
+    document.getElementById('form-tag').addEventListener('submit', (e)=>{
+      e.preventDefault(); const f = new FormData(e.target); const d = Object.fromEntries(f.entries()); d.featured = d.featured==='true';
+      if(e.target.dataset.editId){ const i = db.tags.findIndex(x=>x.id===e.target.dataset.editId); d.id = db.tags[i].id; d.createdAt=db.tags[i].createdAt; db.tags[i]=d; }
+      else { d.id = uid(); d.createdAt=Date.now(); db.tags.unshift(d); }
+      saveDB(db); closeModal('#modal-tag'); renderTags(); e.target.reset(); e.target.dataset.editId='';
+    });
+
+    document.getElementById('form-biz').addEventListener('submit', (e)=>{
+      e.preventDefault(); const f = new FormData(e.target); const d = Object.fromEntries(f.entries());
+      d.maxProc = +d.maxProc; d.zeroReplica = d.zeroReplica==='true'; d.autoOff = d.autoOff==='true';
+      if(e.target.dataset.editId){ const i = db.bizApps.findIndex(x=>x.id===e.target.dataset.editId); d.id=db.bizApps[i].id; d.createdAt=db.bizApps[i].createdAt; d.status=db.bizApps[i].status||'上架'; db.bizApps[i]=d; }
+      else { d.id = uid(); d.createdAt=Date.now(); d.status='上架'; db.bizApps.unshift(d); }
+      saveDB(db); closeModal('#modal-biz'); renderBizApps(); e.target.reset(); e.target.dataset.editId='';
+    });
+
+    document.getElementById('form-cat').addEventListener('submit', (e)=>{
+      e.preventDefault(); const f = new FormData(e.target); const d = Object.fromEntries(f.entries()); d.weight = +d.weight; d.visible = d.visible==='true'; d.apps=(d.apps||'').split(',').map(s=>s.trim()).filter(Boolean); d.updatedAt=Date.now();
+      if(e.target.dataset.editId){ const i = db.categories.findIndex(x=>x.id===e.target.dataset.editId); d.id=db.categories[i].id; db.categories[i]=d; }
+      else { d.id = uid(); db.categories.push(d); }
+      saveDB(db); closeModal('#modal-cat'); renderCategories(); e.target.reset(); e.target.dataset.editId='';
+    });
+
+    // --- 模态框与表单复用工具 ---
+    function openModal(sel, _){ document.querySelector(sel).classList.add('show'); }
+    function closeModal(sel){ document.querySelector(sel).classList.remove('show'); }
+    document.querySelectorAll('[data-close]').forEach(btn=> btn.addEventListener('click', ()=> closeModal(btn.dataset.close)));
+
+    function fillForm(formSel, data){
+      const form = document.querySelector(formSel); form.reset(); form.dataset.editId = data && (data.id||'');
+      if(!data) return;
+      [...form.elements].forEach(el=>{
+        if(!el.name) return; const v = data[el.name]; if(v===undefined) return;
+        if(el.type==='checkbox') el.checked = !!v; else el.value = Array.isArray(v)? v.join(', ') : v;
+      });
     }
-  });
-}
-renderList();
-byId('search').addEventListener('input',e=>renderList(e.target.value.trim()));
 
-/* 创建字典：打开空白编辑页 */
-byId('btn-create').onclick=()=>openEditor(null);
+    // --- 导入导出 ---
+    document.getElementById('exportBtn').onclick = ()=> downloadJSON('mcp-admin-demo.json', db);
+    document.getElementById('importBtn').onclick = ()=> {
+      const inp = document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+      inp.onchange = async ()=>{ const file = inp.files[0]; const text = await file.text(); try{ const data = JSON.parse(text); Object.assign(db, data); saveDB(db); syncRoute(); alert('导入成功'); }catch{ alert('JSON 解析失败'); } };
+      inp.click();
+    };
 
-/* ========== 第二页：编辑页 ========== */
-let currentCode=null;
-function fillMetaForm(dict){
-  byId('edit-code').value=dict.code||'';
-  byId('edit-name').value=dict.name||'';
-  byId('edit-desc').value=dict.desc||'';
-  byId('dict-title').textContent=`字典项管理 · ${dict.name||'（未命名）'}（${dict.code||'未设置'}）`;
-}
-function renderItems(items){
-  const tbody=byId('dict-item-body'); tbody.innerHTML='';
-  (items||[]).forEach((it,idx)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td>${idx+1}</td>
-      <td><input class="input" value="${it.label||''}" placeholder="Label"></td>
-      <td><input class="input" value="${it.value||''}" placeholder="Value"></td>
-      <td><input class="input" value="${it.remark||''}" placeholder="备注"></td>
-      <td><span class="link" onclick="deleteRow(this)">删除</span></td>`;
-    tbody.appendChild(tr);
-  });
-}
-function openEditor(code){
-  const dict= dictRows.find(r=>r.code===code) || {code:'',name:'',desc:'',items:[]};
-  currentCode = dict.code || null;
-  fillMetaForm(dict);
-  renderItems(dict.items);
-  show('page-item');
-}
-byId('btn-back').onclick=()=>show('page-list');
+    function downloadJSON(filename, data){
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+    }
 
-function updateRowNumbers(){ document.querySelectorAll('#dict-item-body tr').forEach((tr,i)=>tr.children[0].textContent=i+1); }
-function deleteRow(el){ el.closest('tr').remove(); updateRowNumbers(); }
-window.deleteRow=deleteRow;
+    // --- 全局搜索 ---
+    document.getElementById('globalSearch').addEventListener('keydown', (e)=>{
+      if(e.key!=='Enter') return; const q = e.target.value.trim(); if(!q) return; const hit = db.apps.find(a=>a.name.includes(q)) || db.bizApps.find(b=>b.name.includes(q)); if(hit){ if(hit.corp) goto('biz-apps'); else goto('apps'); } else alert('未找到相关对象');
+    });
 
-byId('btn-add-item').onclick=()=>{
-  const tbody=byId('dict-item-body');
-  const tr=document.createElement('tr');
-  tr.innerHTML=`
-    <td></td>
-    <td><input class="input" placeholder="Label"></td>
-    <td><input class="input" placeholder="Value"></td>
-    <td><input class="input" placeholder="备注"></td>
-    <td><span class="link" onclick="deleteRow(this)">删除</span></td>`;
-  tbody.appendChild(tr); updateRowNumbers();
-};
-
-/* 保存：元信息 + 字典项 */
-byId('btn-save-dict').onclick=()=>{
-  const info={
-    code:byId('edit-code').value.trim(),
-    name:byId('edit-name').value.trim(),
-    desc:byId('edit-desc').value.trim()
-  };
-  if(!info.code||!info.name){ alert('“字典编码”“名称”为必填'); return; }
-
-  const items=[];
-  document.querySelectorAll('#dict-item-body tr').forEach(tr=>{
-    const inputs=tr.querySelectorAll('input');
-    items.push({ label:inputs[0].value.trim(), value:inputs[1].value.trim(), remark:inputs[2].value.trim() });
-  });
-
-  const existsIdx=dictRows.findIndex(r=>r.code===currentCode);
-  const dup=dictRows.some(r=>r.code===info.code && info.code!==currentCode);
-  if(dup){ alert('字典编码已存在'); return; }
-
-  const now=new Date().toISOString().slice(0,10);
-  if(existsIdx>=0){
-    dictRows[existsIdx]={...dictRows[existsIdx], ...info, items};
-  }else{
-    dictRows.unshift({...info, date:now, status:'DRAFT', items});
-  }
-
-  console.log('保存数据：', {...info, items});
-  alert('已保存！（控制台查看 JSON）');
-  renderList(byId('search').value.trim());
-  show('page-list');
-};
-</script>
+    // 初始化
+    syncRoute();
+  </script>
 </body>
 </html>
